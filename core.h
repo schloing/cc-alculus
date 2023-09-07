@@ -15,8 +15,8 @@ typedef enum {
 } TokenType;
 
 typedef struct {
-    const char* value;
-    TokenType   type;
+    char*     value;
+    TokenType type;
 } Token;
 
 extern FILE* buffer;

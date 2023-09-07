@@ -36,8 +36,10 @@ tokenize() {
 
         Token token;
 
-        token.value = (char*)malloc(sizeof(char));
-        memcpy((void*)token.value, &active, sizeof(char));
+        token.value = (char*)malloc(sizeof(char) * 2);
+
+        token.value[0] = active;
+        token.value[1] = '\0';
         
         switch (active) {
         // for now, implement only tokens in the test file
@@ -73,17 +75,18 @@ tokenize() {
 
             literal[literal_pos] = '\0';
 
-            token.value = (char*)realloc((void*)token.value,  sizeof(char) * literal_pos);
-            memcpy((void*)token.value, (void*)literal, sizeof(char) * literal_pos);
+            token.value = (char*)realloc((void*)token.value, sizeof(char) * (literal_pos + 1));
+            strcpy(token.value, literal);
+
+            free(literal);
         }
         }
 
         token_sequence[sequence_pos++] = token;
-        printf("%s, %s\n", token_sequence[sequence_pos - 1].value, token.value);
 
         if (sequence_pos >= sequence_size) {
             sequence_size += 5;
-            token_sequence = (Token*)realloc(token_sequence, sequence_size);
+            token_sequence = (Token*)realloc(token_sequence, sizeof(Token) * sequence_size);
         }
     }
 }
@@ -105,8 +108,8 @@ int main() {
 
     tokenize();
 
-    for (int i = 0; i < sequence_pos - 1; i++) {
-        printf("%s ", token_sequence[i].value);
+    for (int i = 0; i < sequence_pos; i++) {
+        printf("%s\n", token_sequence[i].value);
         free((void*)token_sequence[i].value);
     }
 
