@@ -38,7 +38,8 @@ tokenize() {
 
         Token token;
 
-        _Bool NUMERICAL = isdigit(active) > 0;
+        _Bool NUMERICAL   = isdigit(active) > 0;
+        _Bool SKIP_ANYWAY = 0;
 
         switch (active) {
         // for now, implement only tokens in the test file
@@ -49,7 +50,18 @@ tokenize() {
         case '=': token.type = EQUALS;        break;
         case '+':
                   token.type = ADDITION;
-//                if (peek() == '+') /* handle increment differently */;
+
+                  if (peek() == '+') {
+                      SKIP_ANYWAY = 1;
+
+                      token.type  = INCREMENT;
+                      token.value = (char*)malloc(sizeof(char) * 3);
+
+                      token.value[0] = active;
+                      token.value[1] = active;
+                      token.value[2] = '\0';
+                  }
+
                   break;
         case ';': token.type = SEMICOLON;     break;
         case '>': token.type = GREATER_THAN;  break;
@@ -88,7 +100,7 @@ tokenize() {
             }
         }
 
-        if (token.type != LITERAL && token.type != NUMERICAL_LITERAL) {
+        if ((token.type != LITERAL && token.type != NUMERICAL_LITERAL) || !SKIP_ANYWAY) {
             token.value = (char*)malloc(sizeof(char) * 2);
 
             token.value[0] = active;
