@@ -6,14 +6,50 @@
 #include "../include/core.h"
 #include "../include/interpreter.h"
 
-/* -------------- TOKEN -------------- */
-Token* token_sequence = NULL;
-size_t sequence_size = 10;
-size_t sequence_pos = 0;
+/* -------------- KEYWD, TOKEN, BUFFER -------------- */
 
-/* -------------- LEXER -------------- */
-FILE* buffer = NULL;
-char active = 0;
+uint8_t G[] = {
+    0,  0,  0,  8,  0,  0,  0,  21, 11, 2,
+    42, 0,  30, 0,  35, 46, 15, 11, 23, 12,
+    37, 0,  44, 39, 0,  0,  2,  0,  0,  0,
+    0,  33, 34, 0,  32, 22, 0,  1,  0,  33,
+    28, 0,  42, 37, 21, 21, 47, 6,  27, 31,
+    40, 26
+};
+
+static inline
+uint16_t hash_f(const char* key, const char* T) {
+    int len = strlen(T);
+    int sum = 0;
+
+    for (int i = 0; key[i] != '\0'; i++)
+        sum += (int)(T[i % len]) * (int)(key[i]);
+
+    return sum % 52;
+}
+
+static inline
+uint16_t perfect_hash(const char* key) {
+    return (G[hash_f(key, "ATN3gDqu1R")] + G[hash_f(key, "hFXWQwhbww")]) % 52;
+}
+
+static inline
+TYPE keyword(const char* literal) {
+    uint16_t hashed = perfect_hash(literal);
+    printf("%s -> %d\n", literal, hashed);
+
+    if (hashed >= END - KEYWORDS) return END;
+    return (TYPE)(KEYWORDS + (hashed + 1));
+}
+
+Token* token_sequence = NULL;
+size_t sequence_size  = 10;
+size_t sequence_pos   = 0;
+
+FILE*  buffer         = NULL;
+char   active         = 0;
+
+/* -------------------------------------------------- */
 
 static inline
 char next() {
@@ -48,21 +84,6 @@ tokenize() {
         case '{': token.type = OPEN_CURLY;    break;
         case '}': token.type = CLOSE_CURLY;   break;
         case '=': token.type = EQUALS;        break;
-        case '+':
-                  token.type = ADDITION;
-
-                  if (peek() == '+') {
-                      SKIP_ANYWAY = 1;
-
-                      token.type  = INCREMENT;
-                      token.value = (char*)malloc(sizeof(char) * 3);
-
-                      token.value[0] = active;
-                      token.value[1] = active;
-                      token.value[2] = '\0';
-                  }
-
-                  break;
         case ';': token.type = SEMICOLON;     break;
         case '>': token.type = GREATER_THAN;  break;
         case '"': token.type = QUOTATION;     break;
@@ -70,16 +91,17 @@ tokenize() {
             {
                 token.type = NUMERICAL ? NUMERICAL_LITERAL : LITERAL;
 
-                char*  literal = (char*)malloc(sizeof(char) * 16);
+                char*  literal      = (char*)malloc(sizeof(char) * 16);
                 size_t literal_size = 16;
-                size_t literal_pos = 1;
+                size_t literal_pos  = 1;
 
                 literal[0] = active;
 
-                while ((next() != EOF && !isspace(active)) &&
-                       (NUMERICAL ?
-                        (isdigit(active) > 0) : isalnum(active)) &&
+                while ((next() != EOF && !isspace(active))      &&
+                       (NUMERICAL ?                             //
+                       (isdigit(active) > 0) : isalnum(active)) &&
                        (literal_pos < literal_size)) {
+
                     if (literal_pos == literal_size - 1) {
                         literal_size += 5;
                         literal = (char*)realloc(literal, literal_size);
@@ -96,11 +118,12 @@ tokenize() {
                 token.value = (char*)malloc(sizeof(char) * literal_pos);
                 strcpy(token.value, literal);
 
+                TYPE check_keyword = keyword(token.value);
                 free(literal);
             }
         }
 
-        if ((token.type != LITERAL && token.type != NUMERICAL_LITERAL) || !SKIP_ANYWAY) {
+        if ((token.type != LITERAL && token.type != NUMERICAL_LITERAL) || SKIP_ANYWAY) {
             token.value = (char*)malloc(sizeof(char) * 2);
 
             token.value[0] = active;
