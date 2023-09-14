@@ -1,46 +1,14 @@
 #include <ctype.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include "../include/core.h"
 #include "../include/interpreter.h"
+#include "../include/keywords.h"
 
 /* -------------- KEYWD, TOKEN, BUFFER -------------- */
-
-uint8_t G[] = {
-    0,  0,  0,  8,  0,  0,  0,  21, 11, 2,
-    42, 0,  30, 0,  35, 46, 15, 11, 23, 12,
-    37, 0,  44, 39, 0,  0,  2,  0,  0,  0,
-    0,  33, 34, 0,  32, 22, 0,  1,  0,  33,
-    28, 0,  42, 37, 21, 21, 47, 6,  27, 31,
-    40, 26
-};
-
-static inline
-uint16_t hash_f(const char* key, const char* T) {
-    int len = strlen(T);
-    int sum = 0;
-
-    for (int i = 0; key[i] != '\0'; i++)
-        sum += (int)(T[i % len]) * (int)(key[i]);
-
-    return sum % 52;
-}
-
-static inline
-uint16_t perfect_hash(const char* key) {
-    return (G[hash_f(key, "ATN3gDqu1R")] + G[hash_f(key, "hFXWQwhbww")]) % 52;
-}
-
-static inline
-TYPE keyword(const char* literal) {
-    uint16_t hashed = perfect_hash(literal);
-    printf("%s -> %d\n", literal, hashed);
-
-    if (hashed >= END - KEYWORDS) return END;
-    return (TYPE)(KEYWORDS + (hashed + 1));
-}
 
 Token* token_sequence = NULL;
 size_t sequence_size  = 10;
@@ -48,6 +16,30 @@ size_t sequence_pos   = 0;
 
 FILE*  buffer         = NULL;
 char   active         = 0;
+
+KVP    keywords[]     = {
+    { "int"    , INT    },
+    { "char"   , CHAR   },
+    { "if"     , IF     },
+    { "else"   , ELSE   },
+    { "return" , RETURN },
+};
+
+uint8_t keywords_size = sizeof(keywords) / sizeof(keywords[0]);
+
+bool isKeyword(const char* identifier,
+               TYPE* o_type /* out: type */) {
+
+     for (int i = 0; i < keywords_size; i++)
+         if (strcmp(identifier, keywords[i].keyword) == 0) {
+             *o_type = keywords[i].type;
+             return true;
+         }
+
+    *o_type = LITERAL;
+
+    return false;
+}
 
 /* -------------------------------------------------- */
 
@@ -74,8 +66,8 @@ tokenize() {
 
         Token token;
 
-        _Bool NUMERICAL   = isdigit(active) > 0;
-        _Bool SKIP_ANYWAY = 0;
+        bool NUMERICAL   = isdigit(active) > 0;
+        bool SKIP_ANYWAY = 0;
 
         switch (active) {
         // for now, implement only tokens in the test file
@@ -118,12 +110,15 @@ tokenize() {
                 token.value = (char*)malloc(sizeof(char) * literal_pos);
                 strcpy(token.value, literal);
 
-                TYPE check_keyword = keyword(token.value);
+                bool keyword = isKeyword(token.value, &token.type);
                 free(literal);
             }
         }
 
-        if ((token.type != LITERAL && token.type != NUMERICAL_LITERAL) || SKIP_ANYWAY) {
+        if ((token.type != LITERAL            &&
+             token.type != NUMERICAL_LITERAL  &&
+             token.type <  KEYWORDS)          || SKIP_ANYWAY) {
+
             token.value = (char*)malloc(sizeof(char) * 2);
 
             token.value[0] = active;
