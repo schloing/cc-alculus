@@ -2,7 +2,7 @@
 #define INTERPRETER_H
 
 #include <stddef.h>
-#include "core.h"
+#include "tokens.h"
 
 static void tokenize();
 static void parse();

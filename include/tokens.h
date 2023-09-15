@@ -34,10 +34,7 @@ typedef struct {
 
 extern FILE*   buffer;
 extern char    active;
-extern uint8_t G[];
 
-static inline TYPE     keyword     (const char* string);
-static inline uint16_t hash_f      (const char* key, const char* T);
-static inline uint16_t perfect_hash(const char* key);
+static inline TYPE keyword(const char* string);
 
 #endif

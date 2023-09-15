@@ -4,8 +4,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "../include/core.h"
-#include "../include/interpreter.h"
+#include "../include/tokens.h"
+#include "../include/tokenizer.h"
 #include "../include/keywords.h"
 
 /* -------------- KEYWD, TOKEN, BUFFER -------------- */
@@ -27,7 +27,8 @@ KVP    keywords[]     = {
 
 uint8_t keywords_size = sizeof(keywords) / sizeof(keywords[0]);
 
-bool isKeyword(const char* identifier,
+inline bool
+isKeyword(const char* identifier,
                TYPE* o_type /* out: type */) {
 
      for (int i = 0; i < keywords_size; i++)
