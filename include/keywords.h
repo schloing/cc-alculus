@@ -4,11 +4,11 @@
 #include "tokens.h"
 
 typedef struct {
-    char* keyword;
-    TYPE  type;
+    char*    keyword;
+    TOK_TYPE type;
 } KVP;
 
-bool isKeyword(const char* identifier, TYPE* o_type);
+bool isKeyword(const char* identifier, TOK_TYPE* o_type);
 
 extern KVP     keywords[];
 extern uint8_t keywords_size;

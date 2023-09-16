@@ -25,13 +25,13 @@ typedef enum {
     WHILE            , _BOOL          , _COMPLEX      , _IMAGINARY      ,
 
     END
-} TYPE;
+} TOK_TYPE;
 
 typedef struct {
-    char*   value;
-    TYPE    type;
-    uint8_t row;
-    uint8_t col;
+    char*    value;
+    TOK_TYPE type;
+    uint8_t  row;
+    uint8_t  col;
 } Token;
 
 extern FILE*   buffer;
@@ -39,6 +39,6 @@ extern char    active;
 extern uint8_t row;
 extern uint8_t col;
 
-static inline TYPE keyword(const char* string);
+static inline TOK_TYPE keyword(const char* string);
 
 #endif
