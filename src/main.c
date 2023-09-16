@@ -10,12 +10,14 @@
 
 /* -------------- KEYWD, TOKEN, BUFFER -------------- */
 
-Token* token_sequence = NULL;
-size_t sequence_size  = 10;
-size_t sequence_pos   = 0;
+Token*   token_sequence = NULL;
+size_t   sequence_size  = 10;
+size_t   sequence_pos   = 0;
 
-FILE*  buffer         = NULL;
-char   active         = 0;
+FILE*    buffer  = NULL;
+char     active  = 0;
+uint8_t  row     = 0;
+uint8_t  col     = 0;
 
 KVP    keywords[]     = {
     { "int"    , INT    },
@@ -29,13 +31,14 @@ uint8_t keywords_size = sizeof(keywords) / sizeof(keywords[0]);
 
 inline bool
 isKeyword(const char* identifier,
-               TYPE* o_type /* out: type */) {
+                TYPE* o_type /* out: type */) {
 
-     for (int i = 0; i < keywords_size; i++)
+     for (int i = 0; i < keywords_size; i++) {
          if (strcmp(identifier, keywords[i].keyword) == 0) {
              *o_type = keywords[i].type;
              return true;
          }
+    }
 
     *o_type = LITERAL;
 
@@ -47,6 +50,12 @@ isKeyword(const char* identifier,
 static inline
 char next() {
     active = getc(buffer);
+
+    if (active == '\n') {
+        row++;
+        col = 0;
+    } else { col++; }
+
     return active;
 }
 
@@ -65,7 +74,7 @@ tokenize() {
         // whitespace and unprintable characters
         if (isspace(active) || !isprint(active)) continue;
 
-        Token token;
+        Token token = { .row = row, .col = col };
 
         bool NUMERICAL   = isdigit(active) > 0;
         bool SKIP_ANYWAY = 0;
@@ -145,10 +154,7 @@ int main() {
     token_sequence = (Token*)malloc(sizeof(Token) * 10);
 
     openBuffer("test.c");
-    if (buffer == NULL) {
-        perror("failed to open buffer");
-        exit(1);
-    }
+    if (buffer == NULL) { perror("failed to open buffer"); exit(1); }
 
     tokenize();
 

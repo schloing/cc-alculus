@@ -28,12 +28,16 @@ typedef enum {
 } TYPE;
 
 typedef struct {
-    char* value;
-    TYPE  type;
+    char*   value;
+    TYPE    type;
+    uint8_t row;
+    uint8_t col;
 } Token;
 
 extern FILE*   buffer;
 extern char    active;
+extern uint8_t row;
+extern uint8_t col;
 
 static inline TYPE keyword(const char* string);
 
