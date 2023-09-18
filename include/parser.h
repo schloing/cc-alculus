@@ -8,14 +8,25 @@
 typedef char* IDENTIFIER;
 
 typedef enum {
-    AST_VARIABLE_DECLARATION,
-    AST_FUNCTION_DECLARATION,
+    AST_BINARY_EXPRESSION,
     AST_BLOCK_STATEMENT,
+    AST_FUNCTION_DECLARATION,
     AST_IF_STATEMENT,
     AST_RETURN_STATEMENT,
     AST_UPDATE_EXPRESSION,
-    AST_BINARY_EXPRESSION,
+    AST_VARIABLE_DECLARATION,
 } AST_TYPE;
+
+typedef struct AST_NODE AST_NODE;
+typedef struct AST_NODE BLOCK_STATEMENT;
+
+// (struct BINARY_EXPRESSION) typedef'd later
+struct FUNCTION_DECLARATION;
+struct IF_STATEMENT;
+struct RETURN_STATEMENT;
+struct UPDATE_EXPRESSION;
+struct VARIABLE_DECLARATION;
+struct FUNCTION_DECLARATION;
 
 typedef enum {
     DOUBLE, FLOAT,
@@ -42,20 +53,14 @@ typedef struct {
     };
 } LITERAL;
 
-// *THIS IS NOT GOOD, BUT IT IS A PROOF-OF-CONCEPT IMPLEMENTATION. WILL BE REPLACED*
-
-// this will work:
-// x == 1
-// but this wont
-// 1 == x (or anything else)
-
+// NOTE:
+// (x == 1) is not the same as (1 == x). (1 == x) is not valid.
 typedef struct {
     IDENTIFIER left;
     OPERATOR   _operator;
     LITERAL    right;
 } BINARY_EXPRESSION;
 
-typedef struct AST_NODE AST_NODE;
 
 struct AST_NODE {
     AST_TYPE type;
@@ -79,8 +84,16 @@ struct AST_NODE {
 
         struct IF_STATEMENT {
             BINARY_EXPRESSION* test;
-            AST_NODE* consequent;
-            AST_NODE* alternative;
+            BLOCK_STATEMENT*   consequent;
+            BLOCK_STATEMENT*   alternative; // multiple else-ifs are considered nested if alternatives
+        };
+
+        struct RETURN_STATEMENT {
+            bool type;
+            union RETVAL {
+                IDENTIFIER identifier; // type = 0
+                LITERAL    literal;    // type = 1
+            };
         };
     };
 };
