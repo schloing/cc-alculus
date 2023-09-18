@@ -9,3 +9,7 @@
 #include "../include/keywords.h"
 #include "../include/parser.h"
 
+static void parse() {
+    for (int i = 0; i < sequence_pos; i++) {
+    }
+}

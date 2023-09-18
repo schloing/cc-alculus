@@ -4,9 +4,8 @@
 #include <stddef.h>
 #include "tokens.h"
 
-static void tokenize();
-static void parse();
-static void execute();
+void tokenize  ();
+void openBuffer(const char* source); // this is probably not supposed to be here
 
 static inline char peek();
 static inline char next();

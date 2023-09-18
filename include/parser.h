@@ -2,7 +2,6 @@
 #define PARSER_H
 
 #include "tokens.h"
-#include <cmath>
 #include <stdint.h>
 
 typedef char* IDENTIFIER;
@@ -90,6 +89,7 @@ struct AST_NODE {
 
         struct RETURN_STATEMENT {
             bool type;
+            
             union RETVAL {
                 IDENTIFIER identifier; // type = 0
                 LITERAL    literal;    // type = 1
@@ -97,5 +97,8 @@ struct AST_NODE {
         };
     };
 };
+
+inline AST_NODE* newNode(AST_TYPE type);
+static void parse();
 
 #endif

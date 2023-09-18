@@ -28,4 +28,23 @@ KVP keywords[] =
 
 uint8_t keywords_size = sizeof(keywords) / sizeof(keywords[0]);
 
-// todo: move main() here
+int main() {
+    token_sequence = (Token*)malloc(sizeof(Token) * 10);
+
+    openBuffer("test.c");
+    if (buffer == NULL) { perror("failed to open buffer"); exit(1); }
+
+    tokenize();
+
+#ifdef TOKENIZER_DEBUG
+    for (int i = 0; i < sequence_pos; i++) {
+        printf("%s\n", token_sequence[i].value);
+        free((void*)token_sequence[i].value);
+    }
+#endif
+
+    free(token_sequence);
+    fclose(buffer);
+
+    return 0;
+}

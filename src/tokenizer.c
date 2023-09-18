@@ -58,8 +58,7 @@ char peek() {
     return temp;
 }
 
-static void
-tokenize() {
+void tokenize() {
     while (next() != EOF) {
         // whitespace and unprintable characters
         if (isspace(active) || !isprint(active)) continue;
@@ -134,27 +133,7 @@ tokenize() {
     }
 }
 
-static void
-openBuffer(const char* source) {
+void openBuffer(const char* source) {
     buffer = fopen(source, "rb");
     printf("opened buffer \"%s\"\n", source); 
-}
-
-int main() {
-    token_sequence = (Token*)malloc(sizeof(Token) * 10);
-
-    openBuffer("test.c");
-    if (buffer == NULL) { perror("failed to open buffer"); exit(1); }
-
-    tokenize();
-
-    for (int i = 0; i < sequence_pos; i++) {
-        printf("%s\n", token_sequence[i].value);
-        free((void*)token_sequence[i].value);
-    }
-
-    free(token_sequence);
-    fclose(buffer);
-
-    return 0;
 }
