@@ -98,10 +98,16 @@ struct AST_NODE {
     };
 };
 
-inline AST_NODE* newNode(AST_TYPE type);
+AST_NODE* newNode        (AST_TYPE type);
+Token*    nextToken      ();
+void      expect         (Token* token, TOK_TYPE expectation); // failure in expect'ation results in syntax error
+AST_NODE* parseExpression();
+void      consumeToken   (Token* token);
+void      parse          ();
+void      push           (AST_NODE* node);
 
-void   parse();
-void   expect(Token* token, TOK_TYPE expectation); // failure in expect'ation results in syntax error
-Token* nextToken();
+extern AST_NODE* AST;
+extern size_t    AST_position;
+extern size_t    AST_size;
 
 #endif

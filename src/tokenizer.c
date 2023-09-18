@@ -116,7 +116,7 @@ void tokenize() {
 
         if ((token.type != TOK_LITERAL            &&
              token.type != TOK_NUMERICAL_LITERAL  &&
-             token.type <  KEYWORDS)          || SKIP_ANYWAY) {
+             token.type <  KEYWORDS)              || SKIP_ANYWAY) {
 
             token.value = (char*)malloc(sizeof(char) * 2);
 

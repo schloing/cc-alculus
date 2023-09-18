@@ -9,6 +9,10 @@
 #include "../include/keywords.h"
 #include "../include/parser.h"
 
+Token*   current_ = NULL;
+Token*   next_    = NULL;
+TOK_TYPE type     = 0;
+
 int i = 0; // index in token sequence
 Token* nextToken() {
     Token* token = &token_sequence[++i];
@@ -22,19 +26,35 @@ void expect(Token* token, TOK_TYPE expectation) {
     }
 }
 
-void parse() {
-    for (i = 0; i < sequence_pos; i++) {
-        Token*   active = &token_sequence[i];
-        TOK_TYPE type   = active->type;
+void consumeToken(Token* token) {
+    if (token != NULL && token->type != current_->type) {
+        perror("parser error");
+        // expected {token} instead of {current_}
+    }
 
-        if (type == TOK_INT    ||
-            type == TOK_FLOAT  ||
-            type == TOK_SHORT  ||
-            type == TOK_DOUBLE ||
-            type == TOK_ENUM   ||
-            type == TOK_UNION  ||
-            type == TOK_STRUCT) {
-            expect(nextToken(), TOK_SEMICOLON);
-        }
+    current_ = next_;
+    next_    = nextToken();
+}
+
+// push to AST nodes
+void push(AST_NODE* node) {
+    if (node == NULL) return;
+
+    if (AST_position++ >= AST_size) {
+        AST_size += 10;
+        AST = (AST_NODE*)realloc(AST, AST_size);
+    }
+
+    AST[AST_position] = *node;
+}
+
+AST_NODE* parseExpression();
+
+void parse() {
+    current_ = nextToken();
+    next_    = nextToken();
+
+    for (i = 0; i < sequence_pos; i++) {
+        push(NULL);
     }
 }
