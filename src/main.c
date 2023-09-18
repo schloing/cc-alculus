@@ -7,6 +7,7 @@
 #include "../include/tokens.h"
 #include "../include/tokenizer.h"
 #include "../include/keywords.h"
+#include "../include/parser.h"
 
 Token*  token_sequence = NULL;
 size_t  sequence_size  = 10;
@@ -35,13 +36,7 @@ int main() {
     if (buffer == NULL) { perror("failed to open buffer"); exit(1); }
 
     tokenize();
-
-#ifdef TOKENIZER_DEBUG
-    for (int i = 0; i < sequence_pos; i++) {
-        printf("%s\n", token_sequence[i].value);
-        free((void*)token_sequence[i].value);
-    }
-#endif
+    parse();
 
     free(token_sequence);
     fclose(buffer);

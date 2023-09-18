@@ -99,6 +99,9 @@ struct AST_NODE {
 };
 
 inline AST_NODE* newNode(AST_TYPE type);
-static void parse();
+
+void   parse();
+void   expect(Token* token, TOK_TYPE expectation); // failure in expect'ation results in syntax error
+Token* nextToken();
 
 #endif
