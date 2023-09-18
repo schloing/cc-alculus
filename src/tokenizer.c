@@ -30,7 +30,7 @@ isKeyword(const char* identifier,
          }
     }
 
-    *o_type = LITERAL;
+    *o_type = TOK_LITERAL;
 
     return false;
 }
@@ -71,17 +71,17 @@ tokenize() {
 
         switch (active) {
         // for now, implement only tokens in the test file
-        case '(': token.type = LEFT_PARENTH;  break;
-        case ')': token.type = RIGHT_PARENTH; break;
-        case '{': token.type = OPEN_CURLY;    break;
-        case '}': token.type = CLOSE_CURLY;   break;
-        case '=': token.type = EQUALS;        break;
-        case ';': token.type = SEMICOLON;     break;
-        case '>': token.type = GREATER_THAN;  break;
-        case '"': token.type = QUOTATION;     break;
+        case '(': token.type = TOK_LEFT_PARENTH;  break;
+        case ')': token.type = TOK_RIGHT_PARENTH; break;
+        case '{': token.type = TOK_OPEN_CURLY;    break;
+        case '}': token.type = TOK_CLOSE_CURLY;   break;
+        case '=': token.type = TOK_EQUALS;        break;
+        case ';': token.type = TOK_SEMICOLON;     break;
+        case '>': token.type = TOK_GREATER_THAN;  break;
+        case '"': token.type = TOK_QUOTATION;     break;
         default:
             {
-                token.type = NUMERICAL ? NUMERICAL_LITERAL : LITERAL;
+                token.type = NUMERICAL ? TOK_NUMERICAL_LITERAL : TOK_LITERAL;
 
                 char*  literal      = (char*)malloc(sizeof(char) * 16);
                 size_t literal_size = 16;
@@ -115,8 +115,8 @@ tokenize() {
             }
         }
 
-        if ((token.type != LITERAL            &&
-             token.type != NUMERICAL_LITERAL  &&
+        if ((token.type != TOK_LITERAL            &&
+             token.type != TOK_NUMERICAL_LITERAL  &&
              token.type <  KEYWORDS)          || SKIP_ANYWAY) {
 
             token.value = (char*)malloc(sizeof(char) * 2);

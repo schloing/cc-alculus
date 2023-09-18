@@ -19,11 +19,11 @@ uint8_t col    = 0;
 
 KVP keywords[] =
 {
-    { "int"    , INT    },
-    { "char"   , CHAR   },
-    { "if"     , IF     },
-    { "else"   , ELSE   },
-    { "return" , RETURN },
+    { "int"    , TOK_INT    },
+    { "char"   , TOK_CHAR   },
+    { "if"     , TOK_IF     },
+    { "else"   , TOK_ELSE   },
+    { "return" , TOK_RETURN },
 };
 
 uint8_t keywords_size = sizeof(keywords) / sizeof(keywords[0]);
