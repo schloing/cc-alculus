@@ -59,10 +59,37 @@ AST_NODE* parseExpression() {
             node->LITERAL_.active = DOUBLE;
             node->LITERAL_.DOUBLE = 0;
 
+            consumeToken(NULL);
+
             break;
 
-        case TOK_LITERAL:           break; // can be an identifier OR just a string
-        case TOK_LEFT_PARENTH:      break;
+        case TOK_LITERAL:
+             // node->type = AST_IDENTIFIER
+                
+             node->IDENTIFIER_ = current_->value; 
+
+             consumeToken(NULL);
+
+             break; 
+
+        case TOK_LEFT_PARENTH:
+             consumeToken(current_); // (
+
+             AST_NODE* left  = parseExpression(); consumeToken(NULL);
+             AST_NODE* right = parseExpression();
+
+             OPERATOR operator;
+
+             consumeToken(current_); // )
+
+             node->type = AST_BINARY_EXPRESSION;
+
+             node->BINARY_EXPRESSION_.left      = left;
+             node->BINARY_EXPRESSION_.right     = right;
+             node->BINARY_EXPRESSION_.operator_ = operator;
+
+             break;
+
         default:
             perror("unexpected token");
             // unexpected token {current_.value}

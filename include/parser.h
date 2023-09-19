@@ -17,7 +17,6 @@ typedef enum {
 } AST_TYPE;
 
 typedef struct AST_NODE AST_NODE;
-typedef struct AST_NODE BLOCK_STATEMENT;
 
 // (struct BINARY_EXPRESSION) typedef'd later
 struct FUNCTION_DECLARATION;
@@ -55,9 +54,9 @@ struct LITERAL {
 // NOTE:
 // (x == 1) is not the same as (1 == x). (1 == x) is not valid.
 typedef struct {
-    IDENTIFIER left;
-    OPERATOR   _operator;
-    LITERAL    right;
+    AST_NODE* left;
+    OPERATOR  operator_;
+    AST_NODE* right;
 } BINARY_EXPRESSION;
 
 struct FUNCTION_DECLARATION {
@@ -67,19 +66,19 @@ struct FUNCTION_DECLARATION {
 
 struct VARIABLE_DECLARATION {
     IDENTIFIER identifier;
-    LITERAL    init;
+    AST_NODE*  init;
 };
 
 struct UPDATE_EXPRESSION {
-    OPERATOR   _operator;
+    OPERATOR   operator_;
     bool       postfix; // ++x or x++
     IDENTIFIER argument;
 };
 
 struct IF_STATEMENT {
     BINARY_EXPRESSION* test;
-    BLOCK_STATEMENT*   consequent;
-    BLOCK_STATEMENT*   alternative; // multiple else-ifs are considered nested if alternatives
+    AST_NODE*   consequent;
+    AST_NODE*   alternative; // multiple else-ifs are considered nested if alternatives
 };
 
 struct RETURN_STATEMENT {
@@ -95,8 +94,16 @@ struct AST_NODE {
     AST_TYPE type;
 
     union {
-        LITERAL LITERAL_;
+        LITERAL           LITERAL_;
+        IDENTIFIER        IDENTIFIER_;
+        BINARY_EXPRESSION BINARY_EXPRESSION_;
 
+        struct FUNCTION_DECLARATION FUNCTION_DECLARATION_;
+        struct IF_STATEMENT         IF_STATEMENT_;
+        struct RETURN_STATEMENT     RETURN_STATEMENT_;
+        struct UPDATE_EXPRESSION    UPDATE_EXPRESSION_;
+        struct VARIABLE_DECLARATION VARIABLE_DECLARATION_;
+        struct FUNCTION_DECLARATION FUNCTION_DECLARATION;
     };
 };
 
