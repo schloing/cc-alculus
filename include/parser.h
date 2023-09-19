@@ -37,7 +37,7 @@ typedef enum {
     INCREMENT, DECREMENT
 } OPERATOR;
 
-typedef struct {
+struct LITERAL {
     LITERAL_FLAG active;
 
     union {
@@ -50,7 +50,7 @@ typedef struct {
         char     CHAR;
         char*    STRING;
     };
-} LITERAL;
+};
 
 // NOTE:
 // (x == 1) is not the same as (1 == x). (1 == x) is not valid.
@@ -60,47 +60,49 @@ typedef struct {
     LITERAL    right;
 } BINARY_EXPRESSION;
 
+struct FUNCTION_DECLARATION {
+    IDENTIFIER identifer;
+    IDENTIFIER params;
+};
+
+struct VARIABLE_DECLARATION {
+    IDENTIFIER identifier;
+    LITERAL    init;
+};
+
+struct UPDATE_EXPRESSION {
+    OPERATOR   _operator;
+    bool       postfix; // ++x or x++
+    IDENTIFIER argument;
+};
+
+struct IF_STATEMENT {
+    BINARY_EXPRESSION* test;
+    BLOCK_STATEMENT*   consequent;
+    BLOCK_STATEMENT*   alternative; // multiple else-ifs are considered nested if alternatives
+};
+
+struct RETURN_STATEMENT {
+    bool type;
+
+    union RETVAL {
+        IDENTIFIER identifier; // type = 0
+        LITERAL    literal;    // type = 1
+    };
+};
 
 struct AST_NODE {
     AST_TYPE type;
 
-    union value {
-        struct FUNCTION_DECLARATION {
-            IDENTIFIER identifer;
-            IDENTIFIER params;
-        };
+    union {
+        LITERAL LITERAL_;
 
-        struct VARIABLE_DECLARATION {
-            IDENTIFIER identifier;
-            LITERAL    init;
-        };
-
-        struct UPDATE_EXPRESSION {
-            OPERATOR   _operator;
-            bool       postfix; // ++x or x++
-            IDENTIFIER argument;
-        };
-
-        struct IF_STATEMENT {
-            BINARY_EXPRESSION* test;
-            BLOCK_STATEMENT*   consequent;
-            BLOCK_STATEMENT*   alternative; // multiple else-ifs are considered nested if alternatives
-        };
-
-        struct RETURN_STATEMENT {
-            bool type;
-            
-            union RETVAL {
-                IDENTIFIER identifier; // type = 0
-                LITERAL    literal;    // type = 1
-            };
-        };
     };
 };
 
-AST_NODE* newNode        (AST_TYPE type);
 Token*    nextToken      ();
 void      expect         (Token* token, TOK_TYPE expectation); // failure in expect'ation results in syntax error
+AST_NODE  newNode        (AST_TYPE type);
 AST_NODE* parseExpression();
 void      consumeToken   (Token* token);
 void      parse          ();

@@ -48,7 +48,28 @@ void push(AST_NODE* node) {
     AST[AST_position] = *node;
 }
 
-AST_NODE* parseExpression();
+AST_NODE* parseExpression() {
+    AST_NODE* node;
+
+    switch (current_->type) {
+        case TOK_NUMERICAL_LITERAL:
+            // node->type = AST_LITERAL;
+            // assume double *for now*
+
+            node->LITERAL_.active = DOUBLE;
+            node->LITERAL_.DOUBLE = 0;
+
+            break;
+
+        case TOK_LITERAL:           break; // can be an identifier OR just a string
+        case TOK_LEFT_PARENTH:      break;
+        default:
+            perror("unexpected token");
+            // unexpected token {current_.value}
+    }
+
+    return node;
+}
 
 void parse() {
     current_ = nextToken();
