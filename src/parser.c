@@ -37,19 +37,22 @@ void consumeToken(Token* token) {
 }
 
 // push to AST nodes
-void push(AST_NODE* node) {
-    if (node == NULL) return;
+void push(AST_NODE* parent, AST_NODE* child) {
+    if (parent == NULL ||
+        child  == NULL) return;
 
     if (AST_position++ >= AST_size) {
         AST_size += 10;
         AST = (AST_NODE*)realloc(AST, AST_size);
     }
 
-    AST[AST_position] = *node;
+    AST[AST_position] = *child;
 }
 
+#define AST_PUSH(child) push(AST, child);
+
 AST_NODE* parseExpression() {
-    AST_NODE* node;
+    AST_NODE* node = (AST_NODE*)malloc(sizeof(AST_NODE));
 
     switch (current_->type) {
         case TOK_NUMERICAL_LITERAL:
@@ -80,6 +83,16 @@ AST_NODE* parseExpression() {
 
              OPERATOR operator;
 
+             switch (current_->type) {
+                 case TOK_SUBTRACTION:
+                     operator = DECREMENT;
+                     break;
+                 case TOK_ADDITION:
+                     operator = INCREMENT;
+                     break;
+                 default: break;
+             }
+
              consumeToken(current_); // )
 
              node->type = AST_BINARY_EXPRESSION;
@@ -98,11 +111,57 @@ AST_NODE* parseExpression() {
     return node;
 }
 
+AST_NODE* parseStatement() {
+    AST_NODE* node = (AST_NODE*)malloc(sizeof(AST_NODE));
+
+    if (current_->type > KEYWORDS) {
+        switch (current_->type) {
+            case TOK_IF: 
+                {
+                    consumeToken(current_);
+                    node->type = AST_IF_STATEMENT;
+
+                    AST_NODE* expression = parseExpression();
+
+                    AST_NODE* consequent = (AST_NODE*)malloc(sizeof(AST_NODE));
+                    AST_NODE* alternate  = (AST_NODE*)malloc(sizeof(AST_NODE));
+
+                    bool hasAlternate = false;
+
+                    // '}' inside the statement would close it, will fix later
+
+                    while (current_->type != TOK_CLOSE_CURLY) {
+                        // TODO: elseif
+
+                        if (current_->type == TOK_ELSE) {
+                            consumeToken(current_);
+                            hasAlternate = true;
+                        }
+
+                        push(hasAlternate ? alternate : consequent, parseStatement());
+                    }
+
+                    break;
+                }
+            case TOK_RETURN:
+                break;
+            // TODO: how the flippity jippity do i differentiate between variable
+            // and function definition / declaration? what about just forward decls?
+            default: break;
+        }
+    }
+    else if (current_->type == TOK_LITERAL) {
+        // handle variable assignment or other scenarios
+    }
+
+    return node;
+}
+
 void parse() {
     current_ = nextToken();
     next_    = nextToken();
 
     for (i = 0; i < sequence_pos; i++) {
-        push(NULL);
+         AST_PUSH(parseStatement());
     }
 }
