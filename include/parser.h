@@ -84,36 +84,44 @@ struct IF_STATEMENT {
 struct RETURN_STATEMENT {
     bool type;
 
-    union RETVAL {
-        IDENTIFIER identifier; // type = 0
-        LITERAL    literal;    // type = 1
+    union {
+        IDENTIFIER     identifier; // type = 0
+        struct LITERAL literal;    // type = 1
     };
 };
 
 struct AST_NODE {
     AST_TYPE type;
 
+    AST_NODE* parent;
+    AST_NODE* children;
+
+    size_t children_size;
+    size_t children_count; // position in children array
+
     union {
-        LITERAL           LITERAL_;
         IDENTIFIER        IDENTIFIER_;
         BINARY_EXPRESSION BINARY_EXPRESSION_;
 
+        struct LITERAL              LITERAL_;
         struct FUNCTION_DECLARATION FUNCTION_DECLARATION_;
         struct IF_STATEMENT         IF_STATEMENT_;
         struct RETURN_STATEMENT     RETURN_STATEMENT_;
         struct UPDATE_EXPRESSION    UPDATE_EXPRESSION_;
         struct VARIABLE_DECLARATION VARIABLE_DECLARATION_;
-        struct FUNCTION_DECLARATION FUNCTION_DECLARATION;
     };
 };
 
 Token*    nextToken      ();
-void      expect         (Token* token, TOK_TYPE expectation); // failure in expect'ation results in syntax error
-AST_NODE  newNode        (AST_TYPE type);
+void      expect         (Token* token, TOK_TYPE expectation);
+AST_NODE* newNode        ();
 AST_NODE* parseExpression();
+AST_NODE* parseStatement ();
 void      consumeToken   (Token* token);
 void      parse          ();
-void      push           (AST_NODE* node);
+void      AST_PUSH       (AST_NODE* child);
+void      push           (AST_NODE* parent, AST_NODE* child);
+void      freeAST        (AST_NODE* node);
 
 extern AST_NODE* AST;
 extern size_t    AST_position;

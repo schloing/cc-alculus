@@ -6,6 +6,7 @@
 
 void tokenize  ();
 void openBuffer(const char* source); // this is probably not supposed to be here
+void freeTokens();
 
 static inline char peek();
 static inline char next();
