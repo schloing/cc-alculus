@@ -32,6 +32,18 @@ void expect(Token* token, TOK_TYPE expectation) {
     }
 }
 
+AST_NODE* newNode() {
+    AST_NODE* node = (AST_NODE*)malloc(sizeof(AST_NODE));
+
+    node->children_size  = 10;
+    node->children_count = 0;
+
+    node->children = (AST_NODE*)malloc(sizeof(AST_NODE) *
+                                       node->children_size);
+
+    return node;
+}
+
 void consumeToken(Token* token) {
     if (token != NULL && token->type != current_->type) {
         fprintf(stderr, "parser error: expected token '%s' (%d) but got '%s' (%d)\n",
@@ -72,7 +84,7 @@ void push(AST_NODE* parent, AST_NODE* child) {
 
 
 AST_NODE* parseExpression() {
-    AST_NODE* node = (AST_NODE*)malloc(sizeof(AST_NODE));
+    AST_NODE* node = newNode();
 
     switch (current_->type) {
         case TOK_NUMERICAL_LITERAL:
@@ -137,8 +149,8 @@ void parseIf(AST_NODE* node) {
 
     AST_NODE* expression = parseExpression();
 
-    AST_NODE* consequent = (AST_NODE*)malloc(sizeof(AST_NODE));
-    AST_NODE* alternate  = (AST_NODE*)malloc(sizeof(AST_NODE));
+    AST_NODE* consequent = newNode();
+    AST_NODE* alternate  = newNode();
 
     bool    hasAlternate = false;
     uint8_t nested       = 1; // if this was to somehow wrap around, it should still work
@@ -159,7 +171,7 @@ void parseIf(AST_NODE* node) {
 }
 
 AST_NODE* parseStatement() {
-    AST_NODE* node = (AST_NODE*)malloc(sizeof(AST_NODE));
+    AST_NODE* node = newNode();
 
     if (current_->type > KEYWORDS) {
         switch (current_->type) {
@@ -193,4 +205,4 @@ void parse() {
         printf("%s\n", current_->value);
         AST_PUSH(parseStatement());
     }
-} 
+}

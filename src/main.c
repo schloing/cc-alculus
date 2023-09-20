@@ -32,6 +32,23 @@ KVP keywords[] =
 
 uint8_t keywords_size = sizeof(keywords) / sizeof(keywords[0]);
 
+void freeTokens() {
+    for (int i = 0; i < sequence_pos; i++)
+        free(token_sequence[i].value);
+
+    free(token_sequence);
+}
+
+void freeAST(AST_NODE* node) {
+    if (node == NULL) return;
+
+    for (int i = 0; i < node->children_count; i++)
+        freeAST(&node->children[i]);
+
+    free(node->children);
+    free(node);
+}
+
 int main() {
     openBuffer("test.c");
     
@@ -47,13 +64,11 @@ int main() {
     // anyway. *there may be errors in tokenization, but it would never
     // cause a termination of the program.
     
-    tokenize();
-    parse   ();
-
-    free    (token_sequence);
-    free    (AST);
-
-    fclose  (buffer);
+    tokenize   ();
+    parse      ();
+    freeTokens (/* token_sequence */);
+    freeAST    (AST);
+    fclose     (buffer);
 
     return 0;
 }
