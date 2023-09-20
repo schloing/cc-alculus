@@ -15,31 +15,36 @@ TOK_TYPE type     = 0;
 
 int i = 0; // index in token sequence
 Token* nextToken() {
-    Token* token = &token_sequence[++i];
-    return token;
+    if (i > sequence_pos) return NULL;
+
+    current_ = next_;
+    next_++;
+
+    return current_;
 }
 
 void expect(Token* token, TOK_TYPE expectation) {
     if (token->type != expectation) {
         // TODO: raise a *better* syntax error here
-        perror("syntax error");
+        fprintf(stderr, "syntax error: expected token %d but got '%s' (%d)\n", 
+                expectation, token->value, token->type);
     }
 }
 
 void consumeToken(Token* token) {
     if (token != NULL && token->type != current_->type) {
-        perror("parser error");
-        // expected {token} instead of {current_}
+        fprintf(stderr, "parser error: expected token '%s' (%d) but got '%s' (%d)\n",
+                token->value, token->type, current_->value, current_->type);
     }
 
     current_ = next_;
     next_    = nextToken();
 }
 
-// push to AST nodes
-void push(AST_NODE* parent, AST_NODE* child) {
-    if (parent == NULL ||
-        child  == NULL) return;
+// AST_PUSH(child) != push(AST, child)
+void AST_PUSH(AST_NODE* child) {
+    if (AST   == NULL ||
+        child == NULL) return; // sanity
 
     if (AST_position++ >= AST_size) {
         AST_size += 10;
@@ -49,7 +54,20 @@ void push(AST_NODE* parent, AST_NODE* child) {
     AST[AST_position] = *child;
 }
 
-#define AST_PUSH(child) push(AST, child);
+void push(AST_NODE* parent, AST_NODE* child) {
+    if (parent == NULL ||
+        child  == NULL) return; // sanity
+
+    if (parent->children_count++ >= parent->children_size) {
+        parent->children_size += 10;
+        parent->children = (AST_NODE*)realloc(parent->children,
+                           sizeof(AST_NODE) * parent->children_size);
+    }
+
+    child->parent = parent;
+    parent->children[parent->children_count] = *child;
+}
+
 
 AST_NODE* parseExpression() {
     AST_NODE* node = (AST_NODE*)malloc(sizeof(AST_NODE));
@@ -104,11 +122,38 @@ AST_NODE* parseExpression() {
              break;
 
         default:
-            perror("unexpected token");
-            // unexpected token {current_.value}
+            fprintf(stderr, "unexpected token '%s' (%d)\n",
+                    current_->value, current_->type);
     }
 
     return node;
+}
+
+void parseIf(AST_NODE* node) {
+    consumeToken(current_);
+    node->type = AST_IF_STATEMENT;
+
+    AST_NODE* expression = parseExpression();
+
+    AST_NODE* consequent = (AST_NODE*)malloc(sizeof(AST_NODE));
+    AST_NODE* alternate  = (AST_NODE*)malloc(sizeof(AST_NODE));
+
+    bool    hasAlternate = false;
+    uint8_t nested       = 1; // if this was to somehow wrap around, it should still work
+
+    while (nested > 0) {
+        if      (current_->type == TOK_OPEN_CURLY)  nested++;
+        else if (current_->type == TOK_CLOSE_CURLY) nested--;
+        else if (current_->type == TOK_ELSE) {
+            // TODO: support elseif
+            consumeToken(current_);
+            hasAlternate = true;
+        }
+
+        push(hasAlternate ? alternate : consequent, parseStatement());
+    }
+
+    consumeToken(current_); // '}'
 }
 
 AST_NODE* parseStatement() {
@@ -117,36 +162,11 @@ AST_NODE* parseStatement() {
     if (current_->type > KEYWORDS) {
         switch (current_->type) {
             case TOK_IF: 
-                {
-                    consumeToken(current_);
-                    node->type = AST_IF_STATEMENT;
+                parseIf(node); break;
 
-                    AST_NODE* expression = parseExpression();
-
-                    AST_NODE* consequent = (AST_NODE*)malloc(sizeof(AST_NODE));
-                    AST_NODE* alternate  = (AST_NODE*)malloc(sizeof(AST_NODE));
-
-                    bool hasAlternate = false;
-
-                    // '}' inside the statement would close it, will fix later
-
-                    while (current_->type != TOK_CLOSE_CURLY) {
-                        // TODO: elseif
-
-                        if (current_->type == TOK_ELSE) {
-                            consumeToken(current_);
-                            hasAlternate = true;
-                        }
-
-                        push(hasAlternate ? alternate : consequent, parseStatement());
-                    }
-
-                    break;
-                }
-            case TOK_RETURN:
+            case TOK_RETURN: // TODO: implement return
                 break;
-            // TODO: how the flippity jippity do i differentiate between variable
-            // and function definition / declaration? what about just forward decls?
+
             default: break;
         }
     }
@@ -158,10 +178,11 @@ AST_NODE* parseStatement() {
 }
 
 void parse() {
-    current_ = nextToken();
-    next_    = nextToken();
+    current_ = token_sequence;
+    next_    = token_sequence++;
 
-    for (i = 0; i < sequence_pos; i++) {
-         AST_PUSH(parseStatement());
+    while (nextToken()) {
+        printf("%s, %d\n", current_->value, current_->type);
+        AST_PUSH(parseStatement());
     }
 }
