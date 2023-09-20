@@ -8,6 +8,7 @@
 #include "../include/tokenizer.h"
 #include "../include/keywords.h"
 #include "../include/parser.h"
+#include "../include/stdout.h"
 
 Token*   current_ = NULL;
 Token*   next_    = NULL;
@@ -37,7 +38,7 @@ void consumeToken(Token* token) {
                 token->value, token->type, current_->value, current_->type);
     }
 
-    nextToken();
+    printf("consumetoken: %s\n", nextToken()->value);
 }
 
 // AST_PUSH(child) != push(AST, child)
@@ -172,18 +173,24 @@ AST_NODE* parseStatement() {
         }
     }
     else if (current_->type == TOK_LITERAL) {
-        // handle variable assignment or other scenarios
+        if (next_->type == TOK_EQUALS) {
+            // assume unary expression for current implementation only
+            Token* tmp = current_;
+            nextToken();
+            printf(RED "%s being assigned initial value %s\n" RESET,
+                   tmp->value, next_->value);
+        }
     }
 
     return node;
 }
 
 void parse() {
-    current_ = token_sequence;
-    next_    = token_sequence + 1;
+    next_    = token_sequence;
+    current_ = NULL;
 
-    while (nextToken()) {
-        printf("%s, %d\n", current_->value, current_->type);
+    while (nextToken() != NULL) {
+        printf("%s\n", current_->value);
         AST_PUSH(parseStatement());
     }
 } 
