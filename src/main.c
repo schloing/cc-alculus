@@ -8,6 +8,7 @@
 #include "../include/tokenizer.h"
 #include "../include/keywords.h"
 #include "../include/parser.h"
+#include "../include/stdout.h"
 
 Token*    token_sequence = NULL;
 size_t    sequence_size  = 10;
@@ -57,8 +58,8 @@ int main() {
         exit(1);
     }
 
-    token_sequence = (Token*)malloc(sizeof(Token) * 10);
-    AST            = (AST_NODE*)malloc(sizeof(AST_NODE) * 10);
+    token_sequence = (Token*)malloc(sizeof(Token) * sequence_size);
+    AST            = (AST_NODE*)malloc(sizeof(AST_NODE) * AST_size);
 
     // tokenization should never fail*, so we can just allocate AST
     // anyway. *there may be errors in tokenization, but it would never

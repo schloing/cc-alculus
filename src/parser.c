@@ -60,7 +60,7 @@ void AST_PUSH(AST_NODE* child) {
 
     if (AST_position >= AST_size) {
         AST_size += 10;
-        AST = (AST_NODE*)realloc(AST, AST_size);
+        AST = (AST_NODE*)realloc(AST, sizeof(AST_NODE) * AST_size);
     }
 
     AST[AST_position] = *child;
@@ -203,6 +203,9 @@ void parse() {
 
     while (nextToken() != NULL) {
         printf("%s\n", current_->value);
-        AST_PUSH(parseStatement());
+
+        AST_NODE* node = parseStatement();
+        
+        AST_PUSH(node);
     }
 }
