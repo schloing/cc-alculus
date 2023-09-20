@@ -15,10 +15,10 @@ TOK_TYPE type     = 0;
 
 int i = 0; // index in token sequence
 Token* nextToken() {
-    if (i > sequence_pos) return NULL;
+    if (i++ >= sequence_pos) return NULL;
 
     current_ = next_;
-    next_++;
+    next_ += 1;
 
     return current_;
 }
@@ -37,8 +37,7 @@ void consumeToken(Token* token) {
                 token->value, token->type, current_->value, current_->type);
     }
 
-    current_ = next_;
-    next_    = nextToken();
+    nextToken();
 }
 
 // AST_PUSH(child) != push(AST, child)
@@ -46,19 +45,20 @@ void AST_PUSH(AST_NODE* child) {
     if (AST   == NULL ||
         child == NULL) return; // sanity
 
-    if (AST_position++ >= AST_size) {
+    if (AST_position >= AST_size) {
         AST_size += 10;
         AST = (AST_NODE*)realloc(AST, AST_size);
     }
 
     AST[AST_position] = *child;
+    AST_position++;
 }
 
 void push(AST_NODE* parent, AST_NODE* child) {
     if (parent == NULL ||
         child  == NULL) return; // sanity
 
-    if (parent->children_count++ >= parent->children_size) {
+    if (parent->children_count >= parent->children_size) {
         parent->children_size += 10;
         parent->children = (AST_NODE*)realloc(parent->children,
                            sizeof(AST_NODE) * parent->children_size);
@@ -66,6 +66,7 @@ void push(AST_NODE* parent, AST_NODE* child) {
 
     child->parent = parent;
     parent->children[parent->children_count] = *child;
+    parent->children_count++;
 }
 
 
@@ -179,10 +180,10 @@ AST_NODE* parseStatement() {
 
 void parse() {
     current_ = token_sequence;
-    next_    = token_sequence++;
+    next_    = token_sequence + 1;
 
     while (nextToken()) {
         printf("%s, %d\n", current_->value, current_->type);
         AST_PUSH(parseStatement());
     }
-}
+} 
