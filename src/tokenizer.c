@@ -87,6 +87,8 @@ void tokenize() {
         case ';': token.type = TOK_SEMICOLON;     break;
         case '>': token.type = TOK_GREATER_THAN;  break;
         case '"': token.type = TOK_QUOTATION;     break;
+        case '+': token.type = TOK_ADDITION;      break;
+        case '-': token.type = TOK_SUBTRACTION;   break;
         default:
             {
                 token.type = NUMERICAL ? TOK_NUMERICAL_LITERAL : TOK_LITERAL;

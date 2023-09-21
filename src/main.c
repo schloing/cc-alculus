@@ -20,7 +20,7 @@ size_t    AST_position   = 0;
 
 FILE*     buffer         = NULL;
 char      active         = 0;
-uint8_t   row, col       = 0;
+uint8_t   row = 1, col   = 0;
 
 KVP keywords[] =
 {

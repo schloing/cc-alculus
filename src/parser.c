@@ -99,19 +99,18 @@ AST_NODE* parsePrimaryExpression() {
             break;
 
         case TOK_LITERAL:
-            node->type = AST_IDENTIFIER;
+            node->type        = AST_IDENTIFIER;
             node->IDENTIFIER_ = current_->value;
 
             consumeToken(NULL);
             break;
 
         case TOK_LEFT_PARENTH:
-            consumeToken(NULL);
+            consumeToken(NULL); // (
 
             node = parseExpression();
             
-            consumeToken(NULL); // )
-           
+            consumeToken(newToken(")", TOK_RIGHT_PARENTH)); // )
             break;
 
         default:
@@ -131,7 +130,7 @@ AST_NODE* parseExpression() {
 
         operator = current_->type == TOK_ADDITION ? INCREMENT : DECREMENT;
 
-        consumeToken(NULL);
+        consumeToken(NULL); // the operator
 
         AST_NODE* right = parsePrimaryExpression();
         AST_NODE* node  = newNode();
@@ -143,6 +142,10 @@ AST_NODE* parseExpression() {
         node->BINARY_EXPRESSION_.operator_ = operator;
 
         left = node;
+
+        // why is consumeToken not working here?
+        current_ = next_;
+        next_ += 1;
     }
 
     return left;
@@ -211,7 +214,9 @@ void parseAssignment(AST_NODE* node) {
     char* identifier = current_->value;
 
     consumeToken(NULL);
-    consumeToken(current_); // =
+    consumeToken(NULL); // =
+
+    printf("identifier: %s, current_: %s\n", identifier, current_->value);
 
     node->type = AST_VARIABLE_DECLARATION;
 
@@ -249,8 +254,6 @@ AST_NODE* parseStatement() {
 
     if (current_->type <= KEYWORDS) {
         if (current_->type == TOK_LITERAL && next_->type == TOK_EQUALS) {
-            // assume unary expression for current implementation only
-
             parseAssignment(node);
             printAST(node);
 
