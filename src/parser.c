@@ -86,56 +86,33 @@ void push(AST_NODE* parent, AST_NODE* child) {
 }
 
 
-AST_NODE* parseExpression() {
+
+AST_NODE* parsePrimaryExpression() {
     AST_NODE* node = newNode();
 
     switch (current_->type) {
         case TOK_NUMERICAL_LITERAL:
-            // node->type = AST_LITERAL;
-            // assume double *for now*
-
             node->LITERAL_.active = DOUBLE;
             node->LITERAL_.DOUBLE = 0;
 
             consumeToken(NULL);
-
             break;
 
         case TOK_LITERAL:
-             node->type        = AST_IDENTIFIER;
-             node->IDENTIFIER_ = current_->value; 
+            node->type = AST_IDENTIFIER;
+            node->IDENTIFIER_ = current_->value;
 
-             consumeToken(NULL);
-
-             break; 
+            consumeToken(NULL);
+            break;
 
         case TOK_LEFT_PARENTH:
-             consumeToken(current_); // (
+            consumeToken(NULL);
 
-             AST_NODE* left  = parseExpression(); consumeToken(NULL);
-             AST_NODE* right = parseExpression();
-
-             OPERATOR operator;
-
-             switch (current_->type) {
-                 case TOK_SUBTRACTION:
-                     operator = DECREMENT;
-                     break;
-                 case TOK_ADDITION:
-                     operator = INCREMENT;
-                     break;
-                 default: break;
-             }
-
-             consumeToken(current_); // )
-
-             node->type = AST_BINARY_EXPRESSION;
-
-             node->BINARY_EXPRESSION_.left      = left;
-             node->BINARY_EXPRESSION_.right     = right;
-             node->BINARY_EXPRESSION_.operator_ = operator;
-
-             break;
+            node = parseExpression();
+            
+            consumeToken(NULL); // )
+           
+            break;
 
         default:
             fprintf(stderr, RED "unexpected token '%s' (ln. %d col. %d)\n" RESET,
@@ -144,6 +121,31 @@ AST_NODE* parseExpression() {
     }
 
     return node;
+}
+
+AST_NODE* parseExpression() {
+    AST_NODE* left = parsePrimaryExpression();
+
+    while (current_ && (current_->type == TOK_ADDITION || current_->type == TOK_SUBTRACTION)) {
+        OPERATOR operator;
+
+        operator = current_->type == TOK_ADDITION ? INCREMENT : DECREMENT;
+
+        consumeToken(NULL);
+
+        AST_NODE* right = parsePrimaryExpression();
+        AST_NODE* node  = newNode();
+       
+        node->type = AST_BINARY_EXPRESSION;
+       
+        node->BINARY_EXPRESSION_.left      = left;
+        node->BINARY_EXPRESSION_.right     = right;
+        node->BINARY_EXPRESSION_.operator_ = operator;
+
+        left = node;
+    }
+
+    return left;
 }
 
 void parseIf(AST_NODE* node) {
