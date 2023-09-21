@@ -60,8 +60,10 @@ typedef struct {
 } BINARY_EXPRESSION;
 
 struct FUNCTION_DECLARATION {
-    IDENTIFIER identifer;
-    IDENTIFIER params;
+    IDENTIFIER  identifer;
+    IDENTIFIER* params;
+    size_t      paramCount;
+    size_t      paramSize;
 };
 
 struct VARIABLE_DECLARATION {
