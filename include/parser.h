@@ -82,12 +82,7 @@ struct IF_STATEMENT {
 };
 
 struct RETURN_STATEMENT {
-    bool type;
-
-    union {
-        IDENTIFIER     identifier; // type = 0
-        struct LITERAL literal;    // type = 1
-    };
+    AST_NODE* retval;
 };
 
 struct AST_NODE {
@@ -119,6 +114,8 @@ AST_NODE* parseExpression();
 AST_NODE* parseStatement ();
 void      consumeToken   (Token* token);
 void      parse          ();
+void      parseIf        (AST_NODE* node);
+void      parseCSV       (AST_NODE* node);
 void      AST_PUSH       (AST_NODE* child);
 void      push           (AST_NODE* parent, AST_NODE* child);
 void      freeAST        (AST_NODE* node);
