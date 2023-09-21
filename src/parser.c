@@ -106,7 +106,7 @@ AST_NODE* parsePrimaryExpression() {
             break;
 
         case TOK_LEFT_PARENTH:
-            consumeToken(NULL); // (
+            consumeToken(NULL);                             // (
 
             node = parseExpression();
             
@@ -124,13 +124,15 @@ AST_NODE* parsePrimaryExpression() {
 
 AST_NODE* parseExpression() {
     AST_NODE* left = parsePrimaryExpression();
+    printf("curr: %s\n", current_->value);
 
     while (current_ && (current_->type == TOK_ADDITION || current_->type == TOK_SUBTRACTION)) {
         OPERATOR operator;
 
         operator = current_->type == TOK_ADDITION ? INCREMENT : DECREMENT;
 
-        consumeToken(NULL); // the operator
+        current_ = next_;
+        next_ += 1;
 
         AST_NODE* right = parsePrimaryExpression();
         AST_NODE* node  = newNode();
@@ -142,10 +144,6 @@ AST_NODE* parseExpression() {
         node->BINARY_EXPRESSION_.operator_ = operator;
 
         left = node;
-
-        // why is consumeToken not working here?
-        current_ = next_;
-        next_ += 1;
     }
 
     return left;
