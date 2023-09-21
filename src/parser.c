@@ -173,24 +173,51 @@ void parseIf(AST_NODE* node) {
 AST_NODE* parseStatement() {
     AST_NODE* node = newNode();
 
-    if (current_->type > KEYWORDS) {
-        switch (current_->type) {
-            case TOK_IF: 
-                parseIf(node); break;
-
-            case TOK_RETURN: // TODO: implement return
-                break;
-
-            default: break;
-        }
-    }
-    else if (current_->type == TOK_LITERAL) {
-        if (next_->type == TOK_EQUALS) {
+    if (current_->type <= KEYWORDS) {
+        if (current_->type == TOK_LITERAL && next_->type == TOK_EQUALS) {
             // assume unary expression for current implementation only
             Token* tmp = current_;
             nextToken();
             printf(RED "%s being assigned initial value %s\n" RESET,
                    tmp->value, next_->value);
+        }
+    } 
+    else {
+        switch (current_->type) {
+            case TOK_IF: 
+                parseIf(node);
+                break;
+
+            case TOK_RETURN:
+                node->type       = AST_RETURN_STATEMENT;
+                AST_NODE* retval = node->RETURN_STATEMENT_.retval;
+                
+                consumeToken(current_);
+                parseStatement();
+              
+                // TODO: finish return implementation
+
+                break;
+
+            default:
+                if (current_->type > KEYWORDS && current_->type < TYPES) {
+                    consumeToken(current_);
+                    // current_ is now the function / variable name
+                   
+                    consumeToken(NULL);
+                    // this is a function declaration OR definition
+                   
+                    if (current_->type == TOK_LEFT_PARENTH) {
+                        node->type = AST_FUNCTION_DECLARATION;
+                   
+                        parseCSV(NULL); // parse comma-separated 'values' (arguments)
+                       
+                        if (current_->type == TOK_OPEN_CURLY) { /* do something with this function definition */ }
+                        else { /* do something with this forward declaration */ expect(current_, TOK_SEMICOLON); }
+
+                        return node;
+                    }
+                }
         }
     }
 
