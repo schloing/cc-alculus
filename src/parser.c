@@ -25,11 +25,11 @@ Token* nextToken() {
     return current_;
 }
 
-void expect(Token* token, TOK_TYPE expectation) {
-    if (token->type != expectation) {
+void expect(Token* token, Token* expectation) {
+    if (token->type != expectation->type) {
         // TODO: raise a *better* syntax error here
-        fprintf(stderr, RED "syntax error: expected token %d but got '%s' (ln. %d col. %d)\n" RESET, 
-                expectation, token->value, token->row, token->col);
+        fprintf(stderr, RED "syntax error: expected token '%s' but got '%s' (ln. %d col. %d)\n" RESET, 
+                expectation->value, token->value, token->row, token->col);
         exit(1);
     }
 }
@@ -124,9 +124,11 @@ AST_NODE* parsePrimaryExpression() {
 
 AST_NODE* parseExpression() {
     AST_NODE* left = parsePrimaryExpression();
-    printf("curr: %s\n", current_->value);
 
-    while (current_ && (current_->type == TOK_ADDITION || current_->type == TOK_SUBTRACTION)) {
+    while (current_                 &&
+          (current_->type > BINEXPS &&
+           current_->type < KEYWORDS)) {
+
         OPERATOR operator;
 
         operator = current_->type == TOK_ADDITION ? INCREMENT : DECREMENT;
@@ -186,7 +188,7 @@ void parseCSV(AST_NODE* node) {
     }
 
     consumeToken(current_); // (
-    
+
     while (current_->type != TOK_RIGHT_PARENTH) {
         // push current token as an argument
 
@@ -199,12 +201,14 @@ void parseCSV(AST_NODE* node) {
         params[decl->paramCount++] = strdup(current_->value); // typedef char* IDENTIFIER
 
         if (current_->type != TOK_RIGHT_PARENTH) { 
-            expect(current_, TOK_COMMA);
+            expect(current_, newToken(",", TOK_COMMA));
             consumeToken(current_);
         }
     }
 
-    consumeToken(current_); // )
+    // bug: consumeToken works sometimes but not others. why?
+    current_ = next_;
+    next_ += 1;
 }
 
 
@@ -213,8 +217,6 @@ void parseAssignment(AST_NODE* node) {
 
     consumeToken(NULL);
     consumeToken(NULL); // =
-
-    printf("identifier: %s, current_: %s\n", identifier, current_->value);
 
     node->type = AST_VARIABLE_DECLARATION;
 
@@ -241,7 +243,7 @@ void printAST(AST_NODE* node) {
             printAST(node->BINARY_EXPRESSION_.right);
 
         case AST_IDENTIFIER:
-            printf(CYAN "%s" RESET, node->IDENTIFIER_); return;
+            printf(BLUE "%s" RESET, node->IDENTIFIER_); return;
 
         default: break;
     }
@@ -278,18 +280,30 @@ AST_NODE* parseStatement() {
             default:
                 if (current_->type > KEYWORDS && current_->type < TYPES) {
                     consumeToken(current_); // current_ is now the function / variable name
+                    
+                    char* identifier = current_->value;
+                   
                     consumeToken(NULL);     // this is a function declaration OR definition
                    
                     if (current_->type == TOK_LEFT_PARENTH) {
                         node->type = AST_FUNCTION_DECLARATION;
                    
                         parseCSV(node); // parse comma-separated 'values' (arguments)
-                       
-                        if (current_->type == TOK_OPEN_CURLY) { /* do something with this function definition */ }
-                        else { /* do something with this forward declaration */ expect(current_, TOK_SEMICOLON); }
+           
+
+                        if (current_->type == TOK_OPEN_CURLY) { 
+                            /* do something with this function definition */
+                            printf(GREEN "defined function " BLUE "%s\n" RESET, identifier);
+                        }
+                        else {
+                            /* do something with this forward declaration */
+                            expect(current_, newToken(";", TOK_SEMICOLON));
+                            printf(MAGENTA "[forward] " GREEN "declared function " RESET BLUE "%s\n" RESET, identifier);
+                        }
                     }
                     else if
                         (current_->type == TOK_EQUALS) {
+                            // this is a variable. definitely not the most efficient way of doing things
                             next_ = current_;
                             current_ -= 1;
                             parseStatement();
@@ -306,8 +320,6 @@ void parse() {
     current_ = NULL;
 
     while (nextToken() != NULL) {
-        printf("%s\n", current_->value);
-
         AST_NODE* node = parseStatement();
         
         AST_PUSH(node);

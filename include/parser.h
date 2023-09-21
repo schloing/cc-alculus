@@ -112,7 +112,7 @@ struct AST_NODE {
 
 Token*    nextToken      ();
 void      consumeToken   (Token* token);
-void      expect         (Token* token, TOK_TYPE expectation);
+void      expect         (Token* token, Token* expectation);
 
 AST_NODE* newNode        ();
 AST_NODE* parseExpression();
