@@ -58,6 +58,15 @@ char peek() {
     return temp;
 }
 
+Token* newToken(const char* value, TOK_TYPE type) {
+    Token* token = (Token*)malloc(sizeof(Token));
+    
+    token->value = (char*)value;
+    token->type  = type;
+
+    return token;
+}
+
 void tokenize() {
     while (next() != EOF) {
         // whitespace and unprintable characters

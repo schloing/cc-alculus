@@ -14,6 +14,7 @@ typedef enum {
     AST_RETURN_STATEMENT,
     AST_UPDATE_EXPRESSION,
     AST_VARIABLE_DECLARATION,
+    AST_IDENTIFIER,
 } AST_TYPE;
 
 typedef struct AST_NODE AST_NODE;
@@ -110,16 +111,22 @@ struct AST_NODE {
 };
 
 Token*    nextToken      ();
+void      consumeToken   (Token* token);
 void      expect         (Token* token, TOK_TYPE expectation);
+
 AST_NODE* newNode        ();
 AST_NODE* parseExpression();
 AST_NODE* parseStatement ();
-void      consumeToken   (Token* token);
+
 void      parse          ();
 void      parseIf        (AST_NODE* node);
 void      parseCSV       (AST_NODE* node);
+void      parseAssignment(AST_NODE* node);
+
 void      AST_PUSH       (AST_NODE* child);
 void      push           (AST_NODE* parent, AST_NODE* child);
+
+void      printAST       (AST_NODE* node);
 void      freeAST        (AST_NODE* node);
 
 extern AST_NODE* AST;

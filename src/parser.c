@@ -1,5 +1,6 @@
 #include <ctype.h>
 #include <stdbool.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -27,8 +28,9 @@ Token* nextToken() {
 void expect(Token* token, TOK_TYPE expectation) {
     if (token->type != expectation) {
         // TODO: raise a *better* syntax error here
-        fprintf(stderr, "syntax error: expected token %d but got '%s' (%d)\n", 
-                expectation, token->value, token->type);
+        fprintf(stderr, RED "syntax error: expected token %d but got '%s' (ln. %d col. %d)\n" RESET, 
+                expectation, token->value, token->row, token->col);
+        exit(1);
     }
 }
 
@@ -46,11 +48,12 @@ AST_NODE* newNode() {
 
 void consumeToken(Token* token) {
     if (token != NULL && token->type != current_->type) {
-        fprintf(stderr, "parser error: expected token '%s' (%d) but got '%s' (%d)\n",
-                token->value, token->type, current_->value, current_->type);
+        fprintf(stderr, RED "parser error: expected token '%s' (%d) but got '%s' (ln. %d col. %d)\n" RESET, 
+                token->value, token->type, current_->value, current_->row, current_->col);
+        exit(1);
     }
 
-    printf("consumetoken: %s\n", nextToken()->value);
+    nextToken();
 }
 
 // AST_PUSH(child) != push(AST, child)
@@ -99,8 +102,7 @@ AST_NODE* parseExpression() {
             break;
 
         case TOK_LITERAL:
-             // node->type = AST_IDENTIFIER
-                
+             node->type        = AST_IDENTIFIER;
              node->IDENTIFIER_ = current_->value; 
 
              consumeToken(NULL);
@@ -136,8 +138,9 @@ AST_NODE* parseExpression() {
              break;
 
         default:
-            fprintf(stderr, "unexpected token '%s' (%d)\n",
-                    current_->value, current_->type);
+            fprintf(stderr, RED "unexpected token '%s' (ln. %d col. %d)\n" RESET,
+                    current_->value, current_->row, current_->col);
+            exit(1);
     }
 
     return node;
@@ -201,16 +204,56 @@ void parseCSV(AST_NODE* node) {
     consumeToken(current_); // )
 }
 
+
+void parseAssignment(AST_NODE* node) {
+    char* identifier = current_->value;
+
+    consumeToken(NULL);
+    consumeToken(current_); // =
+
+    node->type = AST_VARIABLE_DECLARATION;
+
+    node->VARIABLE_DECLARATION_.identifier = strdup(identifier);
+    node->VARIABLE_DECLARATION_.init       = parseExpression();
+}
+
+void printAST(AST_NODE* node) {
+    if (node == NULL) return;
+
+    switch (node->type) {
+        case AST_VARIABLE_DECLARATION:
+            printf(GREEN "%s assigned value " RESET, node->VARIABLE_DECLARATION_.identifier);
+       
+            printAST(node->VARIABLE_DECLARATION_.init);
+           
+            printf("\n");
+
+            break;
+
+        case AST_BINARY_EXPRESSION:
+            printAST(node->BINARY_EXPRESSION_.left);
+            printf("%s", node->BINARY_EXPRESSION_.operator_ == INCREMENT ? "+" : "-");
+            printAST(node->BINARY_EXPRESSION_.right);
+
+        case AST_IDENTIFIER:
+            printf(CYAN "%s" RESET, node->IDENTIFIER_); return;
+
+        default: break;
+    }
+}
+
 AST_NODE* parseStatement() {
     AST_NODE* node = newNode();
 
     if (current_->type <= KEYWORDS) {
         if (current_->type == TOK_LITERAL && next_->type == TOK_EQUALS) {
             // assume unary expression for current implementation only
-            Token* tmp = current_;
-            nextToken();
-            printf(RED "%s being assigned initial value %s\n" RESET,
-                   tmp->value, next_->value);
+
+            parseAssignment(node);
+            printAST(node);
+
+//          printf(GREEN "%s being assigned initial value %s\n" RESET,
+//                  current_->value, next_->value);
         }
     } 
     else {
@@ -231,11 +274,8 @@ AST_NODE* parseStatement() {
 
             default:
                 if (current_->type > KEYWORDS && current_->type < TYPES) {
-                    consumeToken(current_);
-                    // current_ is now the function / variable name
-                   
-                    consumeToken(NULL);
-                    // this is a function declaration OR definition
+                    consumeToken(current_); // current_ is now the function / variable name
+                    consumeToken(NULL);     // this is a function declaration OR definition
                    
                     if (current_->type == TOK_LEFT_PARENTH) {
                         node->type = AST_FUNCTION_DECLARATION;
@@ -244,9 +284,13 @@ AST_NODE* parseStatement() {
                        
                         if (current_->type == TOK_OPEN_CURLY) { /* do something with this function definition */ }
                         else { /* do something with this forward declaration */ expect(current_, TOK_SEMICOLON); }
-
-                        return node;
                     }
+                    else if
+                        (current_->type == TOK_EQUALS) {
+                            next_ = current_;
+                            current_ -= 1;
+                            parseStatement();
+                        }
                 }
         }
     }
