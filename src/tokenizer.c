@@ -88,10 +88,10 @@ void tokenize() {
 
                 literal[0] = active;
 
-                while ((next() != EOF && !isspace(active))      &&
-                       (NUMERICAL ?                             //
-                       (isdigit(active) > 0) : isalnum(active)) &&
-                       (literal_pos < literal_size)) {
+                while (next() != EOF                        &&
+                        (NUMERICAL ? isdigit(active)        :
+                        (isalnum(active) || active == '_')) &&
+                        (literal_pos < literal_size)) {
 
                     if (literal_pos == literal_size - 1) {
                         literal_size += 5;
