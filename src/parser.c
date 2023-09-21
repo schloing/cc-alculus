@@ -170,6 +170,37 @@ void parseIf(AST_NODE* node) {
     consumeToken(current_); // '}'
 }
 
+void parseCSV(AST_NODE* node) {
+    struct FUNCTION_DECLARATION* decl = &node->FUNCTION_DECLARATION_;
+    IDENTIFIER* params                = node->FUNCTION_DECLARATION_.params;
+   
+    if (decl->paramSize == 0) {
+        params = (IDENTIFIER*)malloc(sizeof(IDENTIFIER) * 10);
+        decl->paramSize = 10;
+    }
+
+    consumeToken(current_); // (
+    
+    while (current_->type != TOK_RIGHT_PARENTH) {
+        // push current token as an argument
+
+        if (decl->paramCount >= decl->paramSize) {
+            decl->paramSize += 10;
+            params = (IDENTIFIER*)realloc(params,
+                      sizeof(IDENTIFIER) * decl->paramSize);
+        }
+
+        params[decl->paramCount++] = strdup(current_->value); // typedef char* IDENTIFIER
+
+        if (current_->type != TOK_RIGHT_PARENTH) { 
+            expect(current_, TOK_COMMA);
+            consumeToken(current_);
+        }
+    }
+
+    consumeToken(current_); // )
+}
+
 AST_NODE* parseStatement() {
     AST_NODE* node = newNode();
 
@@ -185,8 +216,7 @@ AST_NODE* parseStatement() {
     else {
         switch (current_->type) {
             case TOK_IF: 
-                parseIf(node);
-                break;
+                parseIf(node); return node;
 
             case TOK_RETURN:
                 node->type       = AST_RETURN_STATEMENT;
@@ -210,7 +240,7 @@ AST_NODE* parseStatement() {
                     if (current_->type == TOK_LEFT_PARENTH) {
                         node->type = AST_FUNCTION_DECLARATION;
                    
-                        parseCSV(NULL); // parse comma-separated 'values' (arguments)
+                        parseCSV(node); // parse comma-separated 'values' (arguments)
                        
                         if (current_->type == TOK_OPEN_CURLY) { /* do something with this function definition */ }
                         else { /* do something with this forward declaration */ expect(current_, TOK_SEMICOLON); }
