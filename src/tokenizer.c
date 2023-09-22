@@ -58,13 +58,11 @@ char peek() {
     return temp;
 }
 
-Token* newToken(const char* value, TOK_TYPE type) {
-    Token* token = (Token*)malloc(sizeof(Token));
-    
-    token->value = (char*)value;
-    token->type  = type;
-
-    return token;
+Token newToken(const char* value, TOK_TYPE type) {
+    return (Token) {
+        .value = (char*)value,
+        .type  = type
+    };
 }
 
 void tokenize() {

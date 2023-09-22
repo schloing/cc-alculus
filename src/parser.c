@@ -16,20 +16,21 @@ Token*   next_    = NULL;
 TOK_TYPE type     = 0;
 
 int i = 0; // index in token sequence
+
 Token* nextToken() {
-    if (i++ >= sequence_pos) return NULL;
+    if (i++ > sequence_pos + 1) return NULL;
 
     current_ = next_;
     next_ += 1;
-
+    
     return current_;
 }
 
-void expect(Token* token, Token* expectation) {
-    if (token->type != expectation->type) {
+void expect(Token* token, Token expectation) {
+    if (token->type != expectation.type) {
         // TODO: raise a *better* syntax error here
         fprintf(stderr, RED "syntax error: expected token '%s' but got '%s' (ln. %d col. %d)\n" RESET, 
-                expectation->value, token->value, token->row, token->col);
+                expectation.value, token->value, token->row, token->col);
         exit(1);
     }
 }
@@ -46,14 +47,16 @@ AST_NODE* newNode() {
     return node;
 }
 
-void consumeToken(Token* token) {
-    if (token != NULL && token->type != current_->type) {
+void consumeToken(Token token) {
+    if (current_ != NULL && token.type != current_->type) {
         fprintf(stderr, RED "parser error: expected token '%s' (%d) but got '%s' (ln. %d col. %d)\n" RESET, 
-                token->value, token->type, current_->value, current_->row, current_->col);
+                token.value, token.type, current_->value, current_->row, current_->col);
         exit(1);
     }
 
-    nextToken();
+    if (nextToken() == NULL)
+        fprintf(stderr, YELLOW "warning: consumption of token '%s' (ln. %d col. %d) yielded NULL nextToken()\n" RESET,
+                token.value, token.row, token.col);
 }
 
 // AST_PUSH(child) != push(AST, child)
@@ -95,18 +98,18 @@ AST_NODE* parsePrimaryExpression() {
             node->LITERAL_.active = DOUBLE;
             node->LITERAL_.DOUBLE = 0;
 
-            consumeToken(NULL);
+            nextToken();
             break;
 
         case TOK_LITERAL:
             node->type        = AST_IDENTIFIER;
             node->IDENTIFIER_ = current_->value;
 
-            consumeToken(NULL);
+            nextToken();
             break;
 
         case TOK_LEFT_PARENTH:
-            consumeToken(NULL);                             // (
+            consumeToken(newToken("(", TOK_LEFT_PARENTH)); // (
 
             node = parseExpression();
             
@@ -133,8 +136,7 @@ AST_NODE* parseExpression() {
 
         operator = current_->type == TOK_ADDITION ? INCREMENT : DECREMENT;
 
-        current_ = next_;
-        next_ += 1;
+        nextToken();
 
         AST_NODE* right = parsePrimaryExpression();
         AST_NODE* node  = newNode();
@@ -152,7 +154,8 @@ AST_NODE* parseExpression() {
 }
 
 void parseIf(AST_NODE* node) {
-    consumeToken(current_);
+    consumeToken(newToken("if", TOK_IF));
+
     node->type = AST_IF_STATEMENT;
 
     AST_NODE* expression = parseExpression();
@@ -161,21 +164,20 @@ void parseIf(AST_NODE* node) {
     AST_NODE* alternate  = newNode();
 
     bool    hasAlternate = false;
-    uint8_t nested       = 1; // if this was to somehow wrap around, it should still work
+    uint8_t nested       = 1;
 
     while (nested > 0) {
         if      (current_->type == TOK_OPEN_CURLY)  nested++;
         else if (current_->type == TOK_CLOSE_CURLY) nested--;
         else if (current_->type == TOK_ELSE) {
-            // TODO: support elseif
-            consumeToken(current_);
+            consumeToken(newToken("else", TOK_ELSE));
             hasAlternate = true;
         }
 
         push(hasAlternate ? alternate : consequent, parseStatement());
     }
 
-    consumeToken(current_); // '}'
+    consumeToken(newToken("}", TOK_CLOSE_CURLY));
 }
 
 void parseCSV(AST_NODE* node) {
@@ -187,7 +189,7 @@ void parseCSV(AST_NODE* node) {
         decl->paramSize = 10;
     }
 
-    consumeToken(current_); // (
+    consumeToken(newToken("(", TOK_LEFT_PARENTH));
 
     while (current_->type != TOK_RIGHT_PARENTH) {
         // push current token as an argument
@@ -202,21 +204,19 @@ void parseCSV(AST_NODE* node) {
 
         if (current_->type != TOK_RIGHT_PARENTH) { 
             expect(current_, newToken(",", TOK_COMMA));
-            consumeToken(current_);
+            nextToken();
         }
     }
 
-    // bug: consumeToken works sometimes but not others. why?
-    current_ = next_;
-    next_ += 1;
+    nextToken();
 }
 
 
 void parseAssignment(AST_NODE* node) {
     char* identifier = current_->value;
 
-    consumeToken(NULL);
-    consumeToken(NULL); // =
+    nextToken();
+    consumeToken(newToken("=", TOK_EQUALS));
 
     node->type = AST_VARIABLE_DECLARATION;
 
@@ -256,21 +256,19 @@ AST_NODE* parseStatement() {
         if (current_->type == TOK_LITERAL && next_->type == TOK_EQUALS) {
             parseAssignment(node);
             printAST(node);
-
-//          printf(GREEN "%s being assigned initial value %s\n" RESET,
-//                  current_->value, next_->value);
         }
     } 
     else {
         switch (current_->type) {
             case TOK_IF: 
-                parseIf(node); return node;
+                parseIf(node);
+                break;
 
             case TOK_RETURN:
                 node->type       = AST_RETURN_STATEMENT;
                 AST_NODE* retval = node->RETURN_STATEMENT_.retval;
                 
-                consumeToken(current_);
+                nextToken();
                 parseStatement();
               
                 // TODO: finish return implementation
@@ -279,11 +277,11 @@ AST_NODE* parseStatement() {
 
             default:
                 if (current_->type > KEYWORDS && current_->type < TYPES) {
-                    consumeToken(current_); // current_ is now the function / variable name
+                    nextToken();  // current_ is now the function / variable name
                     
                     char* identifier = current_->value;
                    
-                    consumeToken(NULL);     // this is a function declaration OR definition
+                    nextToken();  // this is a function declaration OR definition
                    
                     if (current_->type == TOK_LEFT_PARENTH) {
                         node->type = AST_FUNCTION_DECLARATION;

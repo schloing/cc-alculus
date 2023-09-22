@@ -65,6 +65,7 @@ struct FUNCTION_DECLARATION {
     IDENTIFIER* params;
     size_t      paramCount;
     size_t      paramSize;
+    bool        isForward;
 };
 
 struct VARIABLE_DECLARATION {
@@ -111,8 +112,8 @@ struct AST_NODE {
 };
 
 Token*    nextToken      ();
-void      consumeToken   (Token* token);
-void      expect         (Token* token, Token* expectation);
+void      consumeToken   (Token  token);
+void      expect         (Token* token, Token expectation);
 
 AST_NODE* newNode        ();
 AST_NODE* parseExpression();
