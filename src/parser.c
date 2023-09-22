@@ -249,6 +249,40 @@ void printAST(AST_NODE* node) {
     }
 }
 
+void parseDefcl(AST_NODE* node) {
+    if (current_->type > KEYWORDS && current_->type < TYPES) {
+        // return type
+        nextToken();
+
+        char* identifier = current_->value;
+
+        nextToken();
+
+        if (current_->type == TOK_LEFT_PARENTH) {
+            node->type = AST_FUNCTION_DECLARATION;
+
+            parseCSV(node); // parse comma-separated 'values' (arguments)
+
+
+            if (current_->type == TOK_OPEN_CURLY) { 
+                /* do something with this function definition */
+                printf(GREEN "defined function " BLUE "%s\n" RESET, identifier);
+            }
+            else {
+                /* do something with this forward declaration */
+                expect(current_, newToken(";", TOK_SEMICOLON));
+                printf(MAGENTA "[forward] " GREEN "declared function " RESET BLUE "%s\n" RESET, identifier);
+            }
+        }
+        else if
+            (current_->type == TOK_EQUALS) {
+                next_ = current_;
+                current_ -= 1;
+                parseStatement();
+            }
+    }
+}
+
 AST_NODE* parseStatement() {
     AST_NODE* node = newNode();
 
@@ -261,8 +295,7 @@ AST_NODE* parseStatement() {
     else {
         switch (current_->type) {
             case TOK_IF: 
-                parseIf(node);
-                break;
+                parseIf(node); break;
 
             case TOK_RETURN:
                 node->type       = AST_RETURN_STATEMENT;
@@ -276,37 +309,7 @@ AST_NODE* parseStatement() {
                 break;
 
             default:
-                if (current_->type > KEYWORDS && current_->type < TYPES) {
-                    nextToken();  // current_ is now the function / variable name
-                    
-                    char* identifier = current_->value;
-                   
-                    nextToken();  // this is a function declaration OR definition
-                   
-                    if (current_->type == TOK_LEFT_PARENTH) {
-                        node->type = AST_FUNCTION_DECLARATION;
-                   
-                        parseCSV(node); // parse comma-separated 'values' (arguments)
-           
-
-                        if (current_->type == TOK_OPEN_CURLY) { 
-                            /* do something with this function definition */
-                            printf(GREEN "defined function " BLUE "%s\n" RESET, identifier);
-                        }
-                        else {
-                            /* do something with this forward declaration */
-                            expect(current_, newToken(";", TOK_SEMICOLON));
-                            printf(MAGENTA "[forward] " GREEN "declared function " RESET BLUE "%s\n" RESET, identifier);
-                        }
-                    }
-                    else if
-                        (current_->type == TOK_EQUALS) {
-                            // this is a variable. definitely not the most efficient way of doing things
-                            next_ = current_;
-                            current_ -= 1;
-                            parseStatement();
-                        }
-                }
+                parseDefcl(node); break;
         }
     }
 
