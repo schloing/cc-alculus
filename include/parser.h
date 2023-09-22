@@ -15,6 +15,7 @@ typedef enum {
     AST_UPDATE_EXPRESSION,
     AST_VARIABLE_DECLARATION,
     AST_IDENTIFIER,
+    AST_LITERAL,
 } AST_TYPE;
 
 typedef struct AST_NODE AST_NODE;
@@ -33,9 +34,8 @@ typedef enum {
     CHAR, STRING,
 } LITERAL_FLAG;
 
-typedef enum {
-    INCREMENT, DECREMENT
-} OPERATOR;
+typedef TOK_TYPE OPERATOR; // trust compiler to only set OPERATOR to
+                           // operator TOK_TYPE's
 
 struct LITERAL {
     LITERAL_FLAG active;

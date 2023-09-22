@@ -4,7 +4,7 @@ int main() {
 
     a = 1 * 23;
 
-    return 0;
+    return a / b;
 }
 
 int x();

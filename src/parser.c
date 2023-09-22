@@ -88,15 +88,14 @@ void push(AST_NODE* parent, AST_NODE* child) {
     parent->children_count++;
 }
 
-
-
 AST_NODE* parsePrimaryExpression() {
     AST_NODE* node = newNode();
 
     switch (current_->type) {
         case TOK_NUMERICAL_LITERAL:
-            node->LITERAL_.active = DOUBLE;
-            node->LITERAL_.DOUBLE = 0;
+            node->type            = AST_LITERAL;
+            node->LITERAL_.active = INT16;
+            node->LITERAL_.INT16  = atoi(current_->value);
 
             nextToken();
             break;
@@ -109,11 +108,11 @@ AST_NODE* parsePrimaryExpression() {
             break;
 
         case TOK_LEFT_PARENTH:
-            consumeToken(newToken("(", TOK_LEFT_PARENTH)); // (
+            consumeToken(newToken("(", TOK_LEFT_PARENTH));
 
             node = parseExpression();
             
-            consumeToken(newToken(")", TOK_RIGHT_PARENTH)); // )
+            consumeToken(newToken(")", TOK_RIGHT_PARENTH));
             break;
 
         default:
@@ -133,8 +132,7 @@ AST_NODE* parseExpression() {
            current_->type < KEYWORDS)) {
 
         OPERATOR operator;
-
-        operator = current_->type == TOK_ADDITION ? INCREMENT : DECREMENT;
+        operator = current_->type;
 
         nextToken();
 
@@ -218,6 +216,9 @@ void parseAssignment(AST_NODE* node) {
     nextToken();
     consumeToken(newToken("=", TOK_EQUALS));
 
+    if (current_->type == TOK_LITERAL)
+        printf("not numerical: %s\n", current_->value);
+
     node->type = AST_VARIABLE_DECLARATION;
 
     node->VARIABLE_DECLARATION_.identifier = strdup(identifier);
@@ -239,11 +240,32 @@ void printAST(AST_NODE* node) {
 
         case AST_BINARY_EXPRESSION:
             printAST(node->BINARY_EXPRESSION_.left);
-            printf("%s", node->BINARY_EXPRESSION_.operator_ == INCREMENT ? "+" : "-");
+
+            char operatorStr = '?';
+          
+            switch (node->BINARY_EXPRESSION_.operator_) {
+            case TOK_ADDITION:    operatorStr = '+'; break;
+            case TOK_SUBTRACTION: operatorStr = '-'; break;
+            case TOK_ASTERISK:    operatorStr = '*'; break;
+            case TOK_DIVISION:    operatorStr = '/'; break;
+            default: break;
+            }
+
+            printf("%c", operatorStr);
+            
             printAST(node->BINARY_EXPRESSION_.right);
 
+            break;
+
         case AST_IDENTIFIER:
-            printf(BLUE "%s" RESET, node->IDENTIFIER_); return;
+            printf(BLUE "%s" RESET, node->IDENTIFIER_); 
+            
+            break;
+    
+        case AST_LITERAL:
+            printf(BLUE "%d" RESET, node->LITERAL_.INT16);
+
+            break;
 
         default: break;
     }
@@ -286,7 +308,7 @@ void parseDefcl(AST_NODE* node) {
 AST_NODE* parseStatement() {
     AST_NODE* node = newNode();
 
-    if (current_->type <= KEYWORDS) {
+    if (current_->type < KEYWORDS) {
         if (current_->type == TOK_LITERAL && next_->type == TOK_EQUALS) {
             parseAssignment(node);
             printAST(node);
@@ -302,9 +324,10 @@ AST_NODE* parseStatement() {
                 AST_NODE* retval = node->RETURN_STATEMENT_.retval;
                 
                 nextToken();
-                parseStatement();
-              
-                // TODO: finish return implementation
+                retval = parseExpression();
+             
+                printf(GREEN "returning value " RESET);
+                printAST(retval); printf("\n");
 
                 break;
 

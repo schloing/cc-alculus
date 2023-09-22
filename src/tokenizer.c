@@ -30,8 +30,6 @@ isKeyword(const char* identifier,
          }
     }
 
-    *o_type = TOK_LITERAL;
-
     return false;
 }
 
@@ -87,8 +85,8 @@ void tokenize() {
         case '"': token.type = TOK_QUOTATION;     break;
         case '+': token.type = TOK_ADDITION;      break;
         case '-': token.type = TOK_SUBTRACTION;   break;
-        case '/': token.type = TOK_DIVISION;      break;
         case '*': token.type = TOK_ASTERISK;      break;
+        case '/': token.type = TOK_DIVISION;      break;
         default:
             {
                 token.type = NUMERICAL ? TOK_NUMERICAL_LITERAL : TOK_LITERAL;
