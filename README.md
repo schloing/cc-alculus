@@ -1,3 +1,7 @@
+<center>
+<img src="ccalc-logo.jpg" height=500px>
+</center>
+
 # cc-alculus
 a webassembly compiler. compiles a simple c-like language into webassembly.  
 cc-alculus was supposed to be a 1:1 c compiler but i honestly dont know enough about compilers to be able to write a half decent parser which can support
@@ -10,16 +14,16 @@ until then, this is the basic test file
 ```c
 int main() {
     int x = 0;
-  
+
     x++;
-    
+
     if (x != 1) {
         // this isnt right...
         // i would output this to the console but there is no stdout
         // i guess ill just return 1
         return 1;
    }
-   
+
    return 0;
 }
 ```
