@@ -9,6 +9,7 @@ typedef char* IDENTIFIER;
 typedef enum {
     AST_BINARY_EXPRESSION,
     AST_BLOCK_STATEMENT,
+    AST_FUNCTION_CALL,
     AST_FUNCTION_DECLARATION,
     AST_IF_STATEMENT,
     AST_RETURN_STATEMENT,
@@ -22,6 +23,7 @@ typedef struct AST_NODE AST_NODE;
 
 // (struct BINARY_EXPRESSION) typedef'd later
 struct FUNCTION_DECLARATION;
+struct FUNCTION_CALL;
 struct IF_STATEMENT;
 struct RETURN_STATEMENT;
 struct UPDATE_EXPRESSION;
@@ -68,6 +70,11 @@ struct FUNCTION_DECLARATION {
     bool        isForward;
 };
 
+struct FUNCTION_CALL {
+    IDENTIFIER  identifier;
+    IDENTIFIER* params;
+};
+
 struct VARIABLE_DECLARATION {
     IDENTIFIER identifier;
     AST_NODE*  init;
@@ -104,6 +111,7 @@ struct AST_NODE {
 
         struct LITERAL              LITERAL_;
         struct FUNCTION_DECLARATION FUNCTION_DECLARATION_;
+        struct FUNCTION_CALL        FUNCTION_CALL_;
         struct IF_STATEMENT         IF_STATEMENT_;
         struct RETURN_STATEMENT     RETURN_STATEMENT_;
         struct UPDATE_EXPRESSION    UPDATE_EXPRESSION_;

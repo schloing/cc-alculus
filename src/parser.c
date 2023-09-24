@@ -101,12 +101,21 @@ AST_NODE* parsePrimaryExpression() {
             break;
 
         case TOK_LITERAL:
-            node->type        = AST_IDENTIFIER;
-            node->IDENTIFIER_ = current_->value;
+        {
+            if (next_->type == TOK_LEFT_PARENTH) {
+                parseCSV(node); // parseCSV assumes function declaration
+                                // need to fix this
+            
+                node->type = AST_FUNCTION_CALL;
+            }
+            else {
+                node->type        = AST_IDENTIFIER;
+                node->IDENTIFIER_ = current_->value;
+            }
 
             nextToken();
             break;
-
+        }
         case TOK_LEFT_PARENTH:
             consumeToken(newToken("(", TOK_LEFT_PARENTH));
 
@@ -216,9 +225,6 @@ void parseAssignment(AST_NODE* node) {
     nextToken();
     consumeToken(newToken("=", TOK_EQUALS));
 
-    if (current_->type == TOK_LITERAL)
-        printf("not numerical: %s\n", current_->value);
-
     node->type = AST_VARIABLE_DECLARATION;
 
     node->VARIABLE_DECLARATION_.identifier = strdup(identifier);
@@ -285,7 +291,6 @@ void parseDefcl(AST_NODE* node) {
 
             parseCSV(node); // parse comma-separated 'values' (arguments)
 
-
             if (current_->type == TOK_OPEN_CURLY) { 
                 /* do something with this function definition */
                 printf(GREEN "defined function " BLUE "%s\n" RESET, identifier);
@@ -293,6 +298,7 @@ void parseDefcl(AST_NODE* node) {
             else {
                 /* do something with this forward declaration */
                 expect(current_, newToken(";", TOK_SEMICOLON));
+                node->FUNCTION_DECLARATION_.isForward = true;
                 printf(MAGENTA "[forward] " GREEN "declared function " RESET BLUE "%s\n" RESET, identifier);
             }
         }
