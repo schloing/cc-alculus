@@ -73,6 +73,8 @@ struct FUNCTION_DECLARATION {
 struct FUNCTION_CALL {
     IDENTIFIER  identifier;
     IDENTIFIER* params;
+    size_t      paramCount;
+    size_t      paramSize;
 };
 
 struct VARIABLE_DECLARATION {

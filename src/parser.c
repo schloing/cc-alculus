@@ -101,21 +101,12 @@ AST_NODE* parsePrimaryExpression() {
             break;
 
         case TOK_LITERAL:
-        {
-            if (next_->type == TOK_LEFT_PARENTH) {
-                parseCSV(node); // parseCSV assumes function declaration
-                                // need to fix this
-            
-                node->type = AST_FUNCTION_CALL;
-            }
-            else {
-                node->type        = AST_IDENTIFIER;
-                node->IDENTIFIER_ = current_->value;
-            }
+            node->type        = AST_IDENTIFIER;
+            node->IDENTIFIER_ = current_->value;
 
             nextToken();
             break;
-        }
+
         case TOK_LEFT_PARENTH:
             consumeToken(newToken("(", TOK_LEFT_PARENTH));
 
@@ -315,9 +306,22 @@ AST_NODE* parseStatement() {
     AST_NODE* node = newNode();
 
     if (current_->type < KEYWORDS) {
-        if (current_->type == TOK_LITERAL && next_->type == TOK_EQUALS) {
-            parseAssignment(node);
-            printAST(node);
+        switch (current_->type) {
+            case TOK_LITERAL:
+                if (next_->type == TOK_EQUALS) {
+                    parseAssignment(node);
+                    printAST(node);
+                }
+                else if
+                   (next_->type == TOK_LEFT_PARENTH) {
+                    char* literal = current_->value;
+                    parseCSV(node); // parseCSV only works for definitions and declarations
+                    printAST(node);
+                }
+                
+                break;
+
+            default: break;
         }
     } 
     else {
@@ -351,7 +355,8 @@ void parse() {
 
     while (nextToken() != NULL) {
         AST_NODE* node = parseStatement();
-        
+
+
         AST_PUSH(node);
     }
 }

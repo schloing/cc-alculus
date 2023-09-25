@@ -1,4 +1,4 @@
-void function_call();
+int function_call();
 int x();
 
 int main() {
