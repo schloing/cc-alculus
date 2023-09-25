@@ -25,6 +25,7 @@ uint8_t   row = 1, col   = 0;
 KVP keywords[] =
 {
     { "int"    , TOK_INT    },
+    { "void"   , TOK_VOID   },
     { "char"   , TOK_CHAR   },
     { "if"     , TOK_IF     },
     { "else"   , TOK_ELSE   },

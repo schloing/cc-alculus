@@ -315,8 +315,11 @@ AST_NODE* parseStatement() {
                 else if
                    (next_->type == TOK_LEFT_PARENTH) {
                     char* literal = current_->value;
-                    parseCSV(node); // parseCSV only works for definitions and declarations
-                    printAST(node);
+
+                    printf("%s called\n", literal);
+
+                    // parseCSV(node); // parseCSV only works for definitions and declarations
+                    // printAST(node);
                 }
                 
                 break;
