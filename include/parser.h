@@ -62,19 +62,20 @@ typedef struct {
     AST_NODE* right;
 } BINARY_EXPRESSION;
 
-struct FUNCTION_DECLARATION {
+struct FUNCTION_COMMON {
     IDENTIFIER  identifer;
     IDENTIFIER* params;
     size_t      paramCount;
     size_t      paramSize;
-    bool        isForward;
+};
+
+struct FUNCTION_DECLARATION {
+    struct FUNCTION_COMMON common;
+    bool                   isForward;
 };
 
 struct FUNCTION_CALL {
-    IDENTIFIER  identifier;
-    IDENTIFIER* params;
-    size_t      paramCount;
-    size_t      paramSize;
+    struct FUNCTION_COMMON common;
 };
 
 struct VARIABLE_DECLARATION {

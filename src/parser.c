@@ -179,12 +179,21 @@ void parseIf(AST_NODE* node) {
 }
 
 void parseCSV(AST_NODE* node) {
-    struct FUNCTION_DECLARATION* decl = &node->FUNCTION_DECLARATION_;
-    IDENTIFIER* params                = node->FUNCTION_DECLARATION_.params;
+    struct FUNCTION_COMMON* properties;
+
+    switch (node->type) {
+        case AST_FUNCTION_DECLARATION: properties = &node->FUNCTION_DECLARATION_.common;
+                                       break;
+        case AST_FUNCTION_CALL:        properties = &node->FUNCTION_CALL_.common;
+                                       break;
+        default: break;
+    }
+    
+    IDENTIFIER* params = properties->params;
    
-    if (decl->paramSize == 0) {
+    if (properties->paramSize == 0) {
         params = (IDENTIFIER*)malloc(sizeof(IDENTIFIER) * 10);
-        decl->paramSize = 10;
+        properties->paramSize = 10;
     }
 
     consumeToken(newToken("(", TOK_LEFT_PARENTH));
@@ -192,13 +201,13 @@ void parseCSV(AST_NODE* node) {
     while (current_->type != TOK_RIGHT_PARENTH) {
         // push current token as an argument
 
-        if (decl->paramCount >= decl->paramSize) {
-            decl->paramSize += 10;
+        if (properties->paramCount >= properties->paramSize) {
+            properties->paramSize += 10;
             params = (IDENTIFIER*)realloc(params,
-                      sizeof(IDENTIFIER) * decl->paramSize);
+                      sizeof(IDENTIFIER) * properties->paramSize);
         }
 
-        params[decl->paramCount++] = strdup(current_->value); // typedef char* IDENTIFIER
+        params[properties->paramCount++] = strdup(current_->value); // typedef char* IDENTIFIER
 
         if (current_->type != TOK_RIGHT_PARENTH) { 
             expect(current_, newToken(",", TOK_COMMA));
