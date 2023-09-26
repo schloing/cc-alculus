@@ -80,6 +80,7 @@ void tokenize() {
         case '{': token.type = TOK_OPEN_CURLY;    break;
         case '}': token.type = TOK_CLOSE_CURLY;   break;
         case '=': token.type = TOK_EQUALS;        break;
+        case ',': token.type = TOK_COMMA;         break;
         case ';': token.type = TOK_SEMICOLON;     break;
         case '>': token.type = TOK_GREATER_THAN;  break;
         case '"': token.type = TOK_QUOTATION;     break;

@@ -1,10 +1,9 @@
 #ifndef PARSER_H
 #define PARSER_H
 
-#include "tokens.h"
 #include <stdint.h>
-
-typedef char* IDENTIFIER;
+#include "tokens.h"
+#include "parser_forwards.h"
 
 typedef enum {
     AST_BINARY_EXPRESSION,
@@ -19,21 +18,19 @@ typedef enum {
     AST_LITERAL,
 } AST_TYPE;
 
-typedef struct AST_NODE AST_NODE;
 
-// (struct BINARY_EXPRESSION) typedef'd later
-struct FUNCTION_DECLARATION;
-struct FUNCTION_CALL;
-struct IF_STATEMENT;
-struct RETURN_STATEMENT;
-struct UPDATE_EXPRESSION;
-struct VARIABLE_DECLARATION;
-struct FUNCTION_DECLARATION;
+// LITERAL bitfield
+#define TYPE_DENOTER 0x1
+#define CONST_VAR    0x2
+#define POINTER      0x3
 
 typedef enum {
+    NONETYPE,
     DOUBLE, FLOAT,
     INT8, INT16, INT32, INT64,
     CHAR, STRING,
+    // type denotation only
+    VOID,
 } LITERAL_FLAG;
 
 typedef TOK_TYPE OPERATOR; // trust compiler to only set OPERATOR to
@@ -41,6 +38,7 @@ typedef TOK_TYPE OPERATOR; // trust compiler to only set OPERATOR to
 
 struct LITERAL {
     LITERAL_FLAG active;
+    uint8_t      flags;
 
     union {
         double   DOUBLE;
@@ -51,8 +49,21 @@ struct LITERAL {
         uint64_t INT64;
         char     CHAR;
         char*    STRING;
+        void*    VOID;
     };
 };
+
+typedef struct {
+    // a bare literal is exactly that: a bare literal,
+    // whereas an identifier is a variable of some type
+    // denoted by the member struct LITERAL type.
+
+    // char* a_string_variable = "hello world";
+    // "hello world" (bare literal) vs a_string_variable (identifier)
+
+    struct LITERAL type;
+    char*          value;
+} IDENTIFIER;
 
 // NOTE:
 // (x == 1) is not the same as (1 == x). (1 == x) is not valid.

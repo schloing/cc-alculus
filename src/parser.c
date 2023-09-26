@@ -101,8 +101,8 @@ AST_NODE* parsePrimaryExpression() {
             break;
 
         case TOK_LITERAL:
-            node->type        = AST_IDENTIFIER;
-            node->IDENTIFIER_ = current_->value;
+            node->type              = AST_IDENTIFIER;
+            node->IDENTIFIER_.value = current_->value;
 
             nextToken();
             break;
@@ -182,11 +182,13 @@ void parseCSV(AST_NODE* node) {
     expect(current_, newToken("(", TOK_LEFT_PARENTH));
 
     struct FUNCTION_COMMON* properties;
+    bool   isDeclaration = false;
 
     switch (node->type) {
-        case AST_FUNCTION_DECLARATION: properties = &node->FUNCTION_DECLARATION_.common;
+        case AST_FUNCTION_DECLARATION: properties    = &node->FUNCTION_DECLARATION_.common;
+                                       isDeclaration = true;
                                        break;
-        case AST_FUNCTION_CALL:        properties = &node->FUNCTION_CALL_.common;
+        case AST_FUNCTION_CALL:        properties    = &node->FUNCTION_CALL_.common;
                                        break;
         default: break;
     }
@@ -200,21 +202,47 @@ void parseCSV(AST_NODE* node) {
 
     consumeToken(newToken("(", TOK_LEFT_PARENTH));
 
+    IDENTIFIER tmp;
+
     while (current_->type != TOK_RIGHT_PARENTH) {
         // push current token as an argument
 
-        if (properties->paramCount >= properties->paramSize) {
-            properties->paramSize += 10;
-            params = (IDENTIFIER*)realloc(params,
-                      sizeof(IDENTIFIER) * properties->paramSize);
+        if (current_->type > KEYWORDS &&
+            current_->type < TYPES) {
+
+            switch (current_->type) {
+                // todo: seperate into own function, implement other types
+                case TOK_INT:  
+                    tmp.type.active = INT16;
+                    break;
+
+                case TOK_VOID:
+                    tmp.type.active = VOID;
+                    break;
+
+                default: break;
+            }
+        }
+        else if 
+           (current_->type == TOK_LITERAL ||
+            current_->type == TOK_NUMERICAL_LITERAL) {
+
+            tmp.value = current_->value;
+
+            if (properties->paramCount >= properties->paramSize) {
+                properties->paramSize += 10;
+                params = (IDENTIFIER*)realloc(params, sizeof(IDENTIFIER) * properties->paramSize);
+            }
+
+            params[properties->paramCount++] = tmp; // typedef char* IDENTIFIER
+           
+            if (isDeclaration)
+                printf(MAGENTA "[CSV] " RED "%s " BLUE "%s\n" RESET, (current_ - 1)->value, current_->value);
+            else
+                printf(MAGENTA "[CSV] " BLUE "%s\n" RESET, current_->value);
         }
 
-        params[properties->paramCount++] = strdup(current_->value); // typedef char* IDENTIFIER
-
-        if (current_->type != TOK_RIGHT_PARENTH) { 
-            expect(current_, newToken(",", TOK_COMMA));
-            nextToken();
-        }
+        nextToken();
     }
 
     nextToken();
@@ -227,8 +255,8 @@ void parseAssignment(AST_NODE* node) {
     nextToken();
     consumeToken(newToken("=", TOK_EQUALS));
 
-    node->VARIABLE_DECLARATION_.identifier = strdup(identifier);
-    node->VARIABLE_DECLARATION_.init       = parseExpression();
+    node->VARIABLE_DECLARATION_.identifier.value = strdup(identifier);
+    node->VARIABLE_DECLARATION_.init             = parseExpression();
 }
 
 void printAST(const AST_NODE* node) {
@@ -236,7 +264,7 @@ void printAST(const AST_NODE* node) {
 
     switch (node->type) {
         case AST_VARIABLE_DECLARATION:
-            printf(GREEN "%s assigned value " RESET, node->VARIABLE_DECLARATION_.identifier);
+            printf(BLUE "%s" GREEN " assigned value " RESET, node->VARIABLE_DECLARATION_.identifier.value);
        
             printAST(node->VARIABLE_DECLARATION_.init);
            
@@ -264,7 +292,7 @@ void printAST(const AST_NODE* node) {
             break;
 
         case AST_IDENTIFIER:
-            printf(BLUE "%s" RESET, node->IDENTIFIER_); 
+            printf(BLUE "%s" RESET, node->IDENTIFIER_.value); 
             
             break;
     
@@ -331,11 +359,10 @@ AST_NODE* parseStatement() {
 
                     char* literal = current_->value;
 
-                    printf("%s called\n", literal);
+                    printf(GREEN "called function " BLUE "%s\n" RESET, literal);
 
                     nextToken();
                     parseCSV(node); // parseCSV only works for definitions and declarations
-                    // printAST(node);
                 }
                 
                 break;

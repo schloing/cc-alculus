@@ -1,4 +1,4 @@
-int function_call();
+int function_call(int a, int b);
 int x();
 
 int main() {
@@ -7,7 +7,7 @@ int main() {
 
     a = 1 * 23;
 
-    function_call();
+    function_call(1, 2);
 
     return a / b;
 }

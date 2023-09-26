@@ -1,0 +1,15 @@
+#ifndef PARSER_FORWARDS_H
+#define PARSER_FORWARDS_H
+
+typedef struct AST_NODE AST_NODE;
+
+// (struct BINARY_EXPRESSION) typedef'd parser.h
+struct FUNCTION_DECLARATION;
+struct FUNCTION_CALL;
+struct IF_STATEMENT;
+struct RETURN_STATEMENT;
+struct UPDATE_EXPRESSION;
+struct VARIABLE_DECLARATION;
+struct FUNCTION_DECLARATION;
+
+#endif
