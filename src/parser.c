@@ -327,7 +327,7 @@ AST_NODE* parseStatement() {
 
                     printf("%s called\n", literal);
 
-                    // parseCSV(node); // parseCSV only works for definitions and declarations
+                    parseCSV(node); // parseCSV only works for definitions and declarations
                     // printAST(node);
                 }
                 
