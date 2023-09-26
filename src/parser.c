@@ -8,6 +8,7 @@
 #include "../include/tokens.h"
 #include "../include/tokenizer.h"
 #include "../include/keywords.h"
+#include "../include/parser_forwards.h"
 #include "../include/parser.h"
 #include "../include/stdout.h"
 
@@ -35,18 +36,6 @@ void expect(const Token* token, const Token expectation) {
     }
 }
 
-AST_NODE* newNode() {
-    AST_NODE* node = (AST_NODE*)malloc(sizeof(AST_NODE));
-
-    node->children_size  = 10;
-    node->children_count = 0;
-
-    node->children = (AST_NODE*)malloc(sizeof(AST_NODE) *
-                                       node->children_size);
-
-    return node;
-}
-
 void consumeToken(Token token) {
     if (current_ != NULL && token.type != current_->type) {
         fprintf(stderr, RED "parser error: expected token '%s' (%d) but got '%s' (ln. %d col. %d)\n" RESET, 
@@ -59,33 +48,16 @@ void consumeToken(Token token) {
                 token.value, token.row, token.col);
 }
 
-// AST_PUSH(child) != push(AST, child)
-void AST_PUSH(const AST_NODE* child) {
-    if (AST   == NULL ||
-        child == NULL) return; // sanity
+AST_NODE* newNode() {
+    AST_NODE* node = (AST_NODE*)malloc(sizeof(AST_NODE));
 
-    if (AST_position >= AST_size) {
-        AST_size += 10;
-        AST = (AST_NODE*)realloc(AST, sizeof(AST_NODE) * AST_size);
-    }
+    node->children_size  = 10;
+    node->children_count = 0;
 
-    AST[AST_position] = *child;
-    AST_position++;
-}
+    node->children = (AST_NODE*)malloc(sizeof(AST_NODE) *
+                                       node->children_size);
 
-void push(AST_NODE* parent, AST_NODE* child) {
-    if (parent == NULL ||
-        child  == NULL) return; // sanity
-
-    if (parent->children_count >= parent->children_size) {
-        parent->children_size += 10;
-        parent->children = (AST_NODE*)realloc(parent->children,
-                           sizeof(AST_NODE) * parent->children_size);
-    }
-
-    child->parent = parent;
-    parent->children[parent->children_count] = *child;
-    parent->children_count++;
+    return node;
 }
 
 AST_NODE* parsePrimaryExpression() {
@@ -151,7 +123,8 @@ AST_NODE* parseExpression() {
     return left;
 }
 
-void parseIf(AST_NODE* node) {
+__attribute__((always_inline)) void
+parseIf(AST_NODE* node) {
     consumeToken(newToken("if", TOK_IF));
 
     node->type = AST_IF_STATEMENT;
@@ -178,7 +151,8 @@ void parseIf(AST_NODE* node) {
     consumeToken(newToken("}", TOK_CLOSE_CURLY));
 }
 
-void parseCSV(AST_NODE* node) {
+__attribute__((always_inline)) void
+parseCSV(AST_NODE* node) {
     expect(current_, newToken("(", TOK_LEFT_PARENTH));
 
     struct FUNCTION_COMMON* properties;
@@ -209,19 +183,8 @@ void parseCSV(AST_NODE* node) {
 
         if (current_->type > KEYWORDS &&
             current_->type < TYPES) {
-
-            switch (current_->type) {
-                // todo: seperate into own function, implement other types
-                case TOK_INT:  
-                    tmp.type.active = INT16;
-                    break;
-
-                case TOK_VOID:
-                    tmp.type.active = VOID;
-                    break;
-
-                default: break;
-            }
+        
+            tmp.type.active = ttop_literal(current_->type);
         }
         else if 
            (current_->type == TOK_LITERAL ||
@@ -248,8 +211,28 @@ void parseCSV(AST_NODE* node) {
     nextToken();
 }
 
+__attribute__((always_inline)) LITERAL_FLAG
+ttop_literal(TOK_TYPE type) { // tokenizer to parser for literal
+    switch (current_->type) {
+        case TOK_INT:  return INT16;
+        case TOK_VOID: return VOID;
+        default:       return NONETYPE;
+    }
+}
 
-void parseAssignment(AST_NODE* node) {
+__attribute__((always_inline)) char
+ttop_operator(TOK_TYPE type) { // tokenizer to parser for operators
+    switch (type) {
+        case TOK_ADDITION:    return '+';
+        case TOK_SUBTRACTION: return '-';
+        case TOK_ASTERISK:    return '*';
+        case TOK_DIVISION:    return '/';
+        default:              return '?';
+    }
+}
+
+__attribute__((always_inline)) void
+parseAssignment(AST_NODE* node) {
     char* identifier = current_->value;
 
     nextToken();
@@ -257,6 +240,78 @@ void parseAssignment(AST_NODE* node) {
 
     node->VARIABLE_DECLARATION_.identifier.value = strdup(identifier);
     node->VARIABLE_DECLARATION_.init             = parseExpression();
+}
+
+__attribute__((always_inline)) void
+parseDefcl(AST_NODE* node) {
+    if (current_->type > KEYWORDS && current_->type < TYPES) {
+        // return type
+
+        char* type = current_->value;
+        nextToken();
+
+        char* identifier = current_->value;
+        nextToken();
+
+        if (current_->type == TOK_LEFT_PARENTH) {
+            node->type = AST_FUNCTION_DECLARATION;
+
+            parseCSV(node); // parse comma-separated 'values' (arguments)
+
+            if (current_->type == TOK_OPEN_CURLY) { 
+                /* do something with this function definition */
+                printf(GREEN "defined function " RED "%s " BLUE "%s\n" RESET, type, identifier);
+            }
+            else {
+                /* do something with this forward declaration */
+                expect(current_, newToken(";", TOK_SEMICOLON));
+                node->FUNCTION_DECLARATION_.isForward = true;
+                printf(MAGENTA "[forward] " GREEN "declared function " RED "%s " BLUE "%s\n" RESET, type, identifier);
+            }
+        }
+        else if
+            (current_->type == TOK_EQUALS) {
+                next_ = current_;
+                current_ -= 1;
+                parseStatement();
+            }
+    }
+}
+
+__attribute__((always_inline)) void
+parseLiteral(AST_NODE* node) {
+    if (next_->type == TOK_EQUALS) {
+        // TODO: differentiate between declaration and assignment in AST
+
+        if ((current_ - 1)->type > KEYWORDS && (current_ - 1)->type < TYPES) {
+            // variable declaration
+            node->type = AST_VARIABLE_DECLARATION;
+
+            // VARIABLE_DECLARATION disregards the type, need to fix this
+
+            parseAssignment(node);
+            printAST(node);
+        }
+        else {
+            // variable assignment
+            node->type = AST_VARIABLE_DECLARATION;
+
+            parseAssignment(node);
+            printAST(node);
+        }
+    }
+    else if
+       (next_->type == TOK_LEFT_PARENTH) {
+           // function call
+           node->type = AST_FUNCTION_CALL;
+
+           char* literal = current_->value;
+
+           printf(GREEN "called function " BLUE "%s\n" RESET, literal);
+
+           nextToken();
+           parseCSV(node); // parseCSV only works for definitions and declarations
+       }
 }
 
 void printAST(const AST_NODE* node) {
@@ -275,16 +330,8 @@ void printAST(const AST_NODE* node) {
         case AST_BINARY_EXPRESSION:
             printAST(node->BINARY_EXPRESSION_.left);
 
-            char operatorStr = '?';
+            char operatorStr = ttop_operator(node->BINARY_EXPRESSION_.operator_);
           
-            switch (node->BINARY_EXPRESSION_.operator_) {
-                case TOK_ADDITION:    operatorStr = '+'; break;
-                case TOK_SUBTRACTION: operatorStr = '-'; break;
-                case TOK_ASTERISK:    operatorStr = '*'; break;
-                case TOK_DIVISION:    operatorStr = '/'; break;
-                default: break;
-            }
-
             printf("%c", operatorStr);
             
             printAST(node->BINARY_EXPRESSION_.right);
@@ -305,65 +352,16 @@ void printAST(const AST_NODE* node) {
     }
 }
 
-void parseDefcl(AST_NODE* node) {
-    if (current_->type > KEYWORDS && current_->type < TYPES) {
-        // return type
-        nextToken();
-
-        char* identifier = current_->value;
-
-        nextToken();
-
-        if (current_->type == TOK_LEFT_PARENTH) {
-            node->type = AST_FUNCTION_DECLARATION;
-
-            parseCSV(node); // parse comma-separated 'values' (arguments)
-
-            if (current_->type == TOK_OPEN_CURLY) { 
-                /* do something with this function definition */
-                printf(GREEN "defined function " BLUE "%s\n" RESET, identifier);
-            }
-            else {
-                /* do something with this forward declaration */
-                expect(current_, newToken(";", TOK_SEMICOLON));
-                node->FUNCTION_DECLARATION_.isForward = true;
-                printf(MAGENTA "[forward] " GREEN "declared function " RESET BLUE "%s\n" RESET, identifier);
-            }
-        }
-        else if
-            (current_->type == TOK_EQUALS) {
-                next_ = current_;
-                current_ -= 1;
-                parseStatement();
-            }
-    }
-}
-
 AST_NODE* parseStatement() {
     AST_NODE* node = newNode();
 
     if (current_->type < KEYWORDS) {
         switch (current_->type) {
             case TOK_LITERAL:
-                if (next_->type == TOK_EQUALS) {
-                    // variable assignment
-                    node->type = AST_VARIABLE_DECLARATION;
+                // potentially special symbols classified as literals
+                // node->type set in parseLiteral
 
-                    parseAssignment(node);
-                    printAST(node);
-                }
-                else if
-                   (next_->type == TOK_LEFT_PARENTH) {
-                    // function call
-                    node->type = AST_FUNCTION_CALL;
-
-                    char* literal = current_->value;
-
-                    printf(GREEN "called function " BLUE "%s\n" RESET, literal);
-
-                    nextToken();
-                    parseCSV(node); // parseCSV only works for definitions and declarations
-                }
+                parseLiteral(node); 
                 
                 break;
 
@@ -405,6 +403,35 @@ AST_NODE* parseStatement() {
     }
 
     return node;
+}
+
+// AST_PUSH(child) != push(AST, child)
+void AST_PUSH(const AST_NODE* child) {
+    if (AST   == NULL ||
+        child == NULL) return; // sanity
+
+    if (AST_position >= AST_size) {
+        AST_size += 10;
+        AST = (AST_NODE*)realloc(AST, sizeof(AST_NODE) * AST_size);
+    }
+
+    AST[AST_position] = *child;
+    AST_position++;
+}
+
+void push(AST_NODE* parent, AST_NODE* child) {
+    if (parent == NULL ||
+        child  == NULL) return; // sanity
+
+    if (parent->children_count >= parent->children_size) {
+        parent->children_size += 10;
+        parent->children = (AST_NODE*)realloc(parent->children,
+                           sizeof(AST_NODE) * parent->children_size);
+    }
+
+    child->parent = parent;
+    parent->children[parent->children_count] = *child;
+    parent->children_count++;
 }
 
 void parse() {

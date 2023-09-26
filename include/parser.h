@@ -133,28 +133,41 @@ struct AST_NODE {
     };
 };
 
-Token*      nextToken       ();
-void        consumeToken    (const Token  token);
-void        expect          (const Token* token, const Token expectation);
+// iterating through tokens
+Token* nextToken();
+void expect(const Token* token, const Token expectation);
+void consumeToken(const Token token);
 
-AST_NODE*   newNode         ();
-AST_NODE*   parseExpression ();
-AST_NODE*   parseStatement  ();
+// modification of ast nodes
+AST_NODE* newNode();
+AST_NODE* parsePrimaryExpression();
+AST_NODE* parseExpression();
+AST_NODE* parseStatement();
 
-void        parse           ();
-inline void parseIf         (AST_NODE* node);
-inline void parseCSV        (AST_NODE* node); // comma-seperated 'values'
-inline void parseAssignment (AST_NODE* node);
-inline void parseDefcl      (AST_NODE* node); // (def)initions, de(cl)aration(s)
+// utilty functions
+inline LITERAL_FLAG ttop_literal(TOK_TYPE type);
+inline char ttop_operator(TOK_TYPE type);
 
-inline void AST_PUSH        (const AST_NODE* child);
-inline void push            (AST_NODE* parent, AST_NODE* child);
+// parsing expressions
+void parse();
 
-void printAST               (const AST_NODE* node);
-void freeAST                (AST_NODE* node);
+inline void parseIf(AST_NODE* node);
+inline void parseCSV(AST_NODE* node);
+inline void parseAssignment(AST_NODE* node);
+inline void parseDefcl(AST_NODE* node);
+inline void parseLiteral(AST_NODE* node);
 
+// pushing to ast
+inline void AST_PUSH(const AST_NODE* child);
+inline void push(AST_NODE* parent, AST_NODE* child);
+
+// utility ast-specific functions
+void printAST(const AST_NODE* node);
+void freeAST(AST_NODE* node);
+
+// globals
 extern AST_NODE* AST;
-extern size_t    AST_position;
-extern size_t    AST_size;
+extern size_t AST_position;
+extern size_t AST_size;
 
 #endif
