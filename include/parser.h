@@ -122,25 +122,25 @@ struct AST_NODE {
     };
 };
 
-Token*      nextToken();
-void        consumeToken(Token  token);
-void        expect(Token* token, Token expectation);
+Token*      nextToken       ();
+void        consumeToken    (const Token  token);
+void        expect          (const Token* token, const Token expectation);
 
-AST_NODE*   newNode();
-AST_NODE*   parseExpression();
-AST_NODE*   parseStatement();
+AST_NODE*   newNode         ();
+AST_NODE*   parseExpression ();
+AST_NODE*   parseStatement  ();
 
-void        parse();
-inline void parseIf(AST_NODE* node);
-inline void parseCSV(AST_NODE* node); // comma-seperated 'values'
-inline void parseAssignment(AST_NODE* node);
-inline void parseDefcl(AST_NODE* node); // (def)initions, de(cl)aration(s)
+void        parse           ();
+inline void parseIf         (AST_NODE* node);
+inline void parseCSV        (AST_NODE* node); // comma-seperated 'values'
+inline void parseAssignment (AST_NODE* node);
+inline void parseDefcl      (AST_NODE* node); // (def)initions, de(cl)aration(s)
 
-inline void AST_PUSH(AST_NODE* child);
-inline void push(AST_NODE* parent, AST_NODE* child);
+inline void AST_PUSH        (const AST_NODE* child);
+inline void push            (AST_NODE* parent, AST_NODE* child);
 
-void printAST(AST_NODE* node);
-void freeAST(AST_NODE* node);
+void printAST               (const AST_NODE* node);
+void freeAST                (AST_NODE* node);
 
 extern AST_NODE* AST;
 extern size_t    AST_position;

@@ -26,7 +26,7 @@ Token* nextToken() {
     return current_;
 }
 
-void expect(Token* token, Token expectation) {
+void expect(const Token* token, const Token expectation) {
     if (token->type != expectation.type) {
         // TODO: raise a *better* syntax error here
         fprintf(stderr, RED "syntax error: expected token '%s' but got '%s' (ln. %d col. %d)\n" RESET, 
@@ -60,7 +60,7 @@ void consumeToken(Token token) {
 }
 
 // AST_PUSH(child) != push(AST, child)
-void AST_PUSH(AST_NODE* child) {
+void AST_PUSH(const AST_NODE* child) {
     if (AST   == NULL ||
         child == NULL) return; // sanity
 
@@ -231,7 +231,7 @@ void parseAssignment(AST_NODE* node) {
     node->VARIABLE_DECLARATION_.init       = parseExpression();
 }
 
-void printAST(AST_NODE* node) {
+void printAST(const AST_NODE* node) {
     if (node == NULL) return;
 
     switch (node->type) {
