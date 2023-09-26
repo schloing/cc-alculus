@@ -179,6 +179,8 @@ void parseIf(AST_NODE* node) {
 }
 
 void parseCSV(AST_NODE* node) {
+    expect(current_, newToken("(", TOK_LEFT_PARENTH));
+
     struct FUNCTION_COMMON* properties;
 
     switch (node->type) {
@@ -225,8 +227,6 @@ void parseAssignment(AST_NODE* node) {
     nextToken();
     consumeToken(newToken("=", TOK_EQUALS));
 
-    node->type = AST_VARIABLE_DECLARATION;
-
     node->VARIABLE_DECLARATION_.identifier = strdup(identifier);
     node->VARIABLE_DECLARATION_.init       = parseExpression();
 }
@@ -250,11 +250,11 @@ void printAST(AST_NODE* node) {
             char operatorStr = '?';
           
             switch (node->BINARY_EXPRESSION_.operator_) {
-            case TOK_ADDITION:    operatorStr = '+'; break;
-            case TOK_SUBTRACTION: operatorStr = '-'; break;
-            case TOK_ASTERISK:    operatorStr = '*'; break;
-            case TOK_DIVISION:    operatorStr = '/'; break;
-            default: break;
+                case TOK_ADDITION:    operatorStr = '+'; break;
+                case TOK_SUBTRACTION: operatorStr = '-'; break;
+                case TOK_ASTERISK:    operatorStr = '*'; break;
+                case TOK_DIVISION:    operatorStr = '/'; break;
+                default: break;
             }
 
             printf("%c", operatorStr);
@@ -318,15 +318,22 @@ AST_NODE* parseStatement() {
         switch (current_->type) {
             case TOK_LITERAL:
                 if (next_->type == TOK_EQUALS) {
+                    // variable assignment
+                    node->type = AST_VARIABLE_DECLARATION;
+
                     parseAssignment(node);
                     printAST(node);
                 }
                 else if
                    (next_->type == TOK_LEFT_PARENTH) {
+                    // function call
+                    node->type = AST_FUNCTION_CALL;
+
                     char* literal = current_->value;
 
                     printf("%s called\n", literal);
 
+                    nextToken();
                     parseCSV(node); // parseCSV only works for definitions and declarations
                     // printAST(node);
                 }
@@ -338,10 +345,17 @@ AST_NODE* parseStatement() {
     } 
     else {
         switch (current_->type) {
-            case TOK_IF: 
-                parseIf(node); break;
+            case TOK_IF:
+                // if statement
+                // node->type set in parseIf
+
+                parseIf(node); 
+
+                break;
 
             case TOK_RETURN:
+                // return statement
+
                 node->type       = AST_RETURN_STATEMENT;
                 AST_NODE* retval = node->RETURN_STATEMENT_.retval;
                 
@@ -354,7 +368,12 @@ AST_NODE* parseStatement() {
                 break;
 
             default:
-                parseDefcl(node); break;
+                // function definition / declaration
+                // node->type set in parseDefcl
+
+                parseDefcl(node); 
+
+                break;
         }
     }
 
