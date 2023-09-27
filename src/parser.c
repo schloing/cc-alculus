@@ -123,7 +123,7 @@ AST_NODE* parseExpression() {
     return left;
 }
 
-__attribute__((always_inline)) void
+inline __attribute__((always_inline)) void
 parseIf(AST_NODE* node) {
     consumeToken(newToken("if", TOK_IF));
 
@@ -151,7 +151,7 @@ parseIf(AST_NODE* node) {
     consumeToken(newToken("}", TOK_CLOSE_CURLY));
 }
 
-__attribute__((always_inline)) void
+inline __attribute__((always_inline)) void
 parseCSV(AST_NODE* node) {
     expect(current_, newToken("(", TOK_LEFT_PARENTH));
 
@@ -211,7 +211,7 @@ parseCSV(AST_NODE* node) {
     nextToken();
 }
 
-__attribute__((always_inline)) LITERAL_FLAG
+inline __attribute__((always_inline)) LITERAL_FLAG
 ttop_literal(TOK_TYPE type) { // tokenizer to parser for literal
     switch (current_->type) {
         case TOK_INT:  return INT16;
@@ -220,7 +220,7 @@ ttop_literal(TOK_TYPE type) { // tokenizer to parser for literal
     }
 }
 
-__attribute__((always_inline)) char
+inline __attribute__((always_inline)) char
 ttop_operator(TOK_TYPE type) { // tokenizer to parser for operators
     switch (type) {
         case TOK_ADDITION:    return '+';
@@ -231,7 +231,7 @@ ttop_operator(TOK_TYPE type) { // tokenizer to parser for operators
     }
 }
 
-__attribute__((always_inline)) void
+inline __attribute__((always_inline)) void
 parseAssignment(AST_NODE* node) {
     char* identifier = current_->value;
 
@@ -242,7 +242,7 @@ parseAssignment(AST_NODE* node) {
     node->VARIABLE_DECLARATION_.init             = parseExpression();
 }
 
-__attribute__((always_inline)) void
+inline __attribute__((always_inline)) void
 parseDefcl(AST_NODE* node) {
     if (current_->type > KEYWORDS && current_->type < TYPES) {
         // return type
@@ -278,7 +278,7 @@ parseDefcl(AST_NODE* node) {
     }
 }
 
-__attribute__((always_inline)) void
+inline __attribute__((always_inline)) void
 parseLiteral(AST_NODE* node) {
     if (next_->type == TOK_EQUALS) {
         // TODO: differentiate between declaration and assignment in AST
