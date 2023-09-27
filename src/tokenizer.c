@@ -99,7 +99,8 @@ void tokenize() {
                 literal[0] = active;
 
                 while (next() != EOF                        &&
-                        (NUMERICAL ? isdigit(active)        :
+                        (NUMERICAL ? (isdigit(active)       ||
+                                      active == '.')        :
                         (isalnum(active) || active == '_')) &&
                         (literal_pos < literal_size)) {
 

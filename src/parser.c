@@ -65,9 +65,25 @@ AST_NODE* parsePrimaryExpression() {
 
     switch (current_->type) {
         case TOK_NUMERICAL_LITERAL:
-            node->type            = AST_LITERAL;
-            node->LITERAL_.active = INT16;
-            node->LITERAL_.INT16  = atoi(current_->value);
+            node->type        = AST_LITERAL;
+            bool isFractional = false;
+
+            for (int i = 0; i < strlen(current_->value); i++)
+                if (current_->value[i] == '.') {
+                    isFractional = true;
+                    break;
+                }
+
+            if (isFractional) {
+                char* endptr;
+           
+                node->LITERAL_.active = DOUBLE;
+                node->LITERAL_.DOUBLE = strtod(current_->value, &endptr);
+            }
+            else {
+                node->LITERAL_.active = INT16;
+                node->LITERAL_.INT16  = atoi(current_->value);
+            }
 
             nextToken();
             break;
@@ -344,7 +360,15 @@ void printAST(const AST_NODE* node) {
             break;
     
         case AST_LITERAL:
-            printf(BLUE "%d" RESET, node->LITERAL_.INT16);
+            switch (node->LITERAL_.active) {
+                case INT16: 
+                    printf(BLUE "%d" RESET, node->LITERAL_.INT16);
+                    break;
+                case DOUBLE:
+                    printf(BLUE "%f" RESET, node->LITERAL_.DOUBLE);
+                    break;
+                default: break;
+            }
 
             break;
 
