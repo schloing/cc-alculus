@@ -12,6 +12,10 @@ void   freeTokens();
 static inline char peek();
 static inline char next();
 
+inline bool istype  (Token* token);
+inline bool isnonkwd(Token* token);
+inline bool isbinexp(Token* token);
+
 extern Token* token_sequence;
 extern size_t sequence_size;
 extern size_t sequence_pos;
