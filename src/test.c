@@ -1,3 +1,6 @@
+/* better test suite
+https://c-testsuite.github.io/gcc-x86_64_report.html */
+
 int function_call(int a, int b);
 int x();
 

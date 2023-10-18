@@ -12,6 +12,11 @@
 #include "../include/parser.h"
 #include "../include/stdout.h"
 
+// need to test on other compilers
+#if defined(__GNUC__) || defined(__GNUG__) && !defined(__clang__)
+#define FORCE_GCC_INLINE __attribute__((always_inline))
+#endif
+
 Token*   current_ = NULL;
 Token*   next_    = NULL;
 TOK_TYPE type     = 0;
@@ -29,7 +34,6 @@ Token* nextToken() {
 
 void expect(const Token* token, const Token expectation) {
     if (token->type != expectation.type) {
-        // TODO: raise a *better* syntax error here
         fprintf(stderr, RED "syntax error: expected token '%s' but got '%s' (ln. %d col. %d)\n" RESET, 
                 expectation.value, token->value, token->row, token->col);
         exit(1);
@@ -116,8 +120,7 @@ AST_NODE* parseExpression() {
     AST_NODE* left = parsePrimaryExpression();
 
     while (current_                 &&
-          (current_->type > BINEXPS &&
-           current_->type < KEYWORDS)) {
+           isbinexp(current_)) {
 
         OPERATOR operator;
         operator = current_->type;
@@ -139,7 +142,7 @@ AST_NODE* parseExpression() {
     return left;
 }
 
-inline __attribute__((always_inline)) void
+inline FORCE_GCC_INLINE void
 parseIf(AST_NODE* node) {
     consumeToken(newToken("if", TOK_IF));
 
@@ -167,7 +170,7 @@ parseIf(AST_NODE* node) {
     consumeToken(newToken("}", TOK_CLOSE_CURLY));
 }
 
-inline __attribute__((always_inline)) void
+inline FORCE_GCC_INLINE void
 parseCSV(AST_NODE* node) {
     expect(current_, newToken("(", TOK_LEFT_PARENTH));
 
@@ -197,9 +200,7 @@ parseCSV(AST_NODE* node) {
     while (current_->type != TOK_RIGHT_PARENTH) {
         // push current token as an argument
 
-        if (current_->type > KEYWORDS &&
-            current_->type < TYPES) {
-        
+        if (istype(current_)) {
             tmp.type.active = ttop_literal(current_->type);
         }
         else if 
@@ -227,7 +228,7 @@ parseCSV(AST_NODE* node) {
     nextToken();
 }
 
-inline __attribute__((always_inline)) LITERAL_FLAG
+inline FORCE_GCC_INLINE LITERAL_FLAG
 ttop_literal(TOK_TYPE type) { // tokenizer to parser for literal
     switch (current_->type) {
         case TOK_INT:  return INT16;
@@ -236,7 +237,7 @@ ttop_literal(TOK_TYPE type) { // tokenizer to parser for literal
     }
 }
 
-inline __attribute__((always_inline)) char
+inline FORCE_GCC_INLINE char
 ttop_operator(TOK_TYPE type) { // tokenizer to parser for operators
     switch (type) {
         case TOK_ADDITION:    return '+';
@@ -247,7 +248,7 @@ ttop_operator(TOK_TYPE type) { // tokenizer to parser for operators
     }
 }
 
-inline __attribute__((always_inline)) void
+inline FORCE_GCC_INLINE void
 parseAssignment(AST_NODE* node) {
     char* identifier = current_->value;
 
@@ -258,9 +259,9 @@ parseAssignment(AST_NODE* node) {
     node->VARIABLE_DECLARATION_.init             = parseExpression();
 }
 
-inline __attribute__((always_inline)) void
+inline FORCE_GCC_INLINE void
 parseDefcl(AST_NODE* node) {
-    if (current_->type > KEYWORDS && current_->type < TYPES) {
+    if (istype(current_)) {
         // return type
 
         char* type = current_->value;
@@ -294,12 +295,13 @@ parseDefcl(AST_NODE* node) {
     }
 }
 
-inline __attribute__((always_inline)) void
+inline FORCE_GCC_INLINE void
 parseLiteral(AST_NODE* node) {
     if (next_->type == TOK_EQUALS) {
         // TODO: differentiate between declaration and assignment in AST
+        Token* prev = (current_ - 1);
 
-        if ((current_ - 1)->type > KEYWORDS && (current_ - 1)->type < TYPES) {
+        if (istype(prev)) {
             // variable declaration
             node->type = AST_VARIABLE_DECLARATION;
 
@@ -379,7 +381,7 @@ void printAST(const AST_NODE* node) {
 AST_NODE* parseStatement() {
     AST_NODE* node = newNode();
 
-    if (current_->type < KEYWORDS) {
+    if (isnonkwd(current_)) {
         switch (current_->type) {
             case TOK_LITERAL:
                 // potentially special symbols classified as literals

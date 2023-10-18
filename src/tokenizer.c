@@ -148,3 +148,19 @@ void openBuffer(const char* source) {
     buffer = fopen(source, "rb");
     printf("opened buffer \"%s\"\n", source); 
 }
+
+// exploit the layout of the TOK_TYPE enum
+
+inline bool istype(Token* token) {
+    return (token->type > KEYWORDS && 
+            token->type < TYPES);
+}
+
+inline bool isnonkwd(Token* token) {
+    return (token->type < KEYWORDS);
+}
+
+inline bool isbinexp(Token* token) {
+    return (token->type > BINEXPS &&
+            token->type < KEYWORDS);
+}
