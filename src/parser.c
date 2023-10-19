@@ -214,7 +214,9 @@ parseCSV(AST_NODE* node) {
                 params = (IDENTIFIER*)realloc(params, sizeof(IDENTIFIER) * properties->paramSize);
             }
 
-            params[properties->paramCount++] = tmp; // typedef char* IDENTIFIER
+            // error over here
+            memcpy(&params[properties->paramCount++], &tmp, sizeof(tmp /* IDENTIFIER */));
+            // params[properties->paramCount++] = tmp; // typedef char* IDENTIFIER
            
             if (isDeclaration)
                 printf(MAGENTA "[CSV] " RED "%s " BLUE "%s\n" RESET, (current_ - 1)->value, current_->value);

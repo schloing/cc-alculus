@@ -2,6 +2,6 @@
 
 # build-run
 
-gcc main.c tokenizer.c parser.c; ./a.out
+gcc main.c tokenizer.c parser.c -g; ./a.out
 
 # compile, run
