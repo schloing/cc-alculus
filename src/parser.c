@@ -11,6 +11,7 @@
 #include "../include/parser_forwards.h"
 #include "../include/parser.h"
 #include "../include/stdout.h"
+#include "../include/errors.h"
 
 // need to test on other compilers
 #if defined(__GNUC__) || defined(__GNUG__) && !defined(__clang__)
@@ -183,19 +184,18 @@ parseCSV(AST_NODE* node) {
                                        break;
         case AST_FUNCTION_CALL:        properties    = &node->FUNCTION_CALL_.common;
                                        break;
-        default: break;
+        default: printf(RED "unexepected node->type for property\n"); exit(1);
     }
-    
-    IDENTIFIER* params = properties->params;
-   
-    if (properties->paramSize == 0) {
-        params = (IDENTIFIER*)malloc(sizeof(IDENTIFIER) * 10);
-        properties->paramSize = 10;
-    }
+
+    properties->paramSize  = 10; // arbitrary default size
+    properties->paramCount = 0;
+
+    properties->params     = (IDENTIFIER*)malloc(sizeof(IDENTIFIER) * properties->paramSize);
 
     consumeToken(newToken("(", TOK_LEFT_PARENTH));
 
-    IDENTIFIER tmp;
+    IDENTIFIER* params = properties->params;
+    IDENTIFIER  tmp;
 
     while (current_->type != TOK_RIGHT_PARENTH) {
         // push current token as an argument
@@ -212,12 +212,12 @@ parseCSV(AST_NODE* node) {
             if (properties->paramCount >= properties->paramSize) {
                 properties->paramSize += 10;
                 params = (IDENTIFIER*)realloc(params, sizeof(IDENTIFIER) * properties->paramSize);
+
+                if (params == NULL) _RAISE(_INTERNAL_REALLOCATION_FAILED);
             }
 
-            // error over here
-            memcpy(&params[properties->paramCount++], &tmp, sizeof(tmp /* IDENTIFIER */));
-            // params[properties->paramCount++] = tmp; // typedef char* IDENTIFIER
-           
+            params[properties->paramCount++] = tmp; // typedef char* IDENTIFIER/
+
             if (isDeclaration)
                 printf(MAGENTA "[CSV] " RED "%s " BLUE "%s\n" RESET, (current_ - 1)->value, current_->value);
             else
@@ -441,6 +441,8 @@ void AST_PUSH(const AST_NODE* child) {
     if (AST_position >= AST_size) {
         AST_size += 10;
         AST = (AST_NODE*)realloc(AST, sizeof(AST_NODE) * AST_size);
+        
+        if (AST == NULL) _RAISE(_INTERNAL_REALLOCATION_FAILED);
     }
 
     AST[AST_position] = *child;
@@ -455,6 +457,8 @@ void push(AST_NODE* parent, AST_NODE* child) {
         parent->children_size += 10;
         parent->children = (AST_NODE*)realloc(parent->children,
                            sizeof(AST_NODE) * parent->children_size);
+
+        if (parent->children == NULL) _RAISE(_INTERNAL_REALLOCATION_FAILED);
     }
 
     child->parent = parent;
