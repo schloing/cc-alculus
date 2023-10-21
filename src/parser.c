@@ -145,7 +145,7 @@ AST_NODE* parseExpression() {
     return left;
 }
 
-inline FORCE_GCC_INLINE void
+/* inline FORCE_GCC_INLINE */ void
 parseIf(AST_NODE* node) {
     consumeToken(newToken("if", TOK_IF));
 
@@ -173,7 +173,7 @@ parseIf(AST_NODE* node) {
     consumeToken(newToken("}", TOK_CLOSE_CURLY));
 }
 
-inline FORCE_GCC_INLINE void
+/* inline FORCE_GCC_INLINE */ void
 parseCSV(AST_NODE* node) {
     expect(current_, newToken("(", TOK_LEFT_PARENTH));
 
@@ -232,7 +232,7 @@ parseCSV(AST_NODE* node) {
     nextToken();
 }
 
-inline FORCE_GCC_INLINE LITERAL_FLAG
+/* inline FORCE_GCC_INLINE */ LITERAL_FLAG
 ttop_literal(TOK_TYPE type) { // tokenizer to parser for literal
     switch (current_->type) {
         case TOK_INT:  return INT16;
@@ -241,7 +241,7 @@ ttop_literal(TOK_TYPE type) { // tokenizer to parser for literal
     }
 }
 
-inline FORCE_GCC_INLINE char
+/* inline FORCE_GCC_INLINE */ char
 ttop_operator(TOK_TYPE type) { // tokenizer to parser for operators
     switch (type) {
         case TOK_ADDITION:    return '+';
@@ -252,7 +252,7 @@ ttop_operator(TOK_TYPE type) { // tokenizer to parser for operators
     }
 }
 
-inline FORCE_GCC_INLINE void
+/* inline FORCE_GCC_INLINE */ void
 parseAssignment(AST_NODE* node) {
     char* identifier = current_->value;
 
@@ -263,7 +263,7 @@ parseAssignment(AST_NODE* node) {
     node->VARIABLE_DECLARATION_.init             = parseExpression();
 }
 
-inline FORCE_GCC_INLINE void
+/* inline FORCE_GCC_INLINE */ void
 parseDefcl(AST_NODE* node) {
     if (istype(current_)) {
         // return type
@@ -302,7 +302,7 @@ parseDefcl(AST_NODE* node) {
     }
 }
 
-inline FORCE_GCC_INLINE void
+/* inline FORCE_GCC_INLINE */ void
 parseLiteral(AST_NODE* node) {
     if (next_->type == TOK_EQUALS) {
         Token* prev = (current_ - 1);
