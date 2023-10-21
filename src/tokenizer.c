@@ -8,6 +8,9 @@
 #include "../include/tokenizer.h"
 #include "../include/keywords.h"
 
+static inline char peek();
+static inline char next();
+
 /* -------------- KEYWD, TOKEN, BUFFER -------------- */
 
 // extern'd tokenizer.h, tokens.h, keywords.h
@@ -120,7 +123,7 @@ void tokenize() {
                 token.value = (char*)malloc(sizeof(char) * literal_pos);
                 strcpy(token.value, literal);
 
-                bool keyword = isKeyword(token.value, &token.type);
+                isKeyword(token.value, &token.type);
                 free(literal);
             }
         }

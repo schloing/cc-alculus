@@ -18,7 +18,6 @@ typedef enum {
     AST_LITERAL,
 } AST_TYPE;
 
-
 // LITERAL bitfield
 #define TYPE_DENOTER 0x1
 #define CONST_VAR    0x2
@@ -144,22 +143,24 @@ AST_NODE* parsePrimaryExpression();
 AST_NODE* parseExpression();
 AST_NODE* parseStatement();
 
+// gcc will auto-inline functions it thinks fit
+
 // utilty functions
-inline LITERAL_FLAG ttop_literal(TOK_TYPE type);
-inline char ttop_operator(TOK_TYPE type);
+LITERAL_FLAG ttop_literal(TOK_TYPE type);
+char ttop_operator(TOK_TYPE type);
 
 // parsing expressions
 void parse();
 
-inline void parseIf(AST_NODE* node);
-inline void parseCSV(AST_NODE* node);
-inline void parseAssignment(AST_NODE* node);
-inline void parseDefcl(AST_NODE* node);
-inline void parseLiteral(AST_NODE* node);
+void parseIf(AST_NODE* node);
+void parseCSV(AST_NODE* node);
+void parseAssignment(AST_NODE* node);
+void parseDefcl(AST_NODE* node);
+void parseLiteral(AST_NODE* node);
 
 // pushing to ast
-inline void AST_PUSH(const AST_NODE* child);
-inline void push(AST_NODE* parent, AST_NODE* child);
+void AST_PUSH(const AST_NODE* child);
+void push(AST_NODE* parent, AST_NODE* child);
 
 // utility ast-specific functions
 void printAST(const AST_NODE* node);

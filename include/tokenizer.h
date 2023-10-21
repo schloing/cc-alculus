@@ -4,13 +4,10 @@
 #include <stddef.h>
 #include "tokens.h"
 
-Token  newToken  (const char* value, const TOK_TYPE type);
-void   tokenize  ();
-void   openBuffer(const char* source); // this is probably not supposed to be here
-void   freeTokens();
-
-static inline char peek();
-static inline char next();
+Token newToken  (const char* value, const TOK_TYPE type);
+void  tokenize  ();
+void  openBuffer(const char* source); // this is probably not supposed to be here
+void  freeTokens();
 
 bool istype  (Token* token);
 bool isnonkwd(Token* token);

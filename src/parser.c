@@ -122,7 +122,7 @@ AST_NODE* parsePrimaryExpression() {
 AST_NODE* parseExpression() {
     AST_NODE* left = parsePrimaryExpression();
 
-    while (current_                 &&
+    while (current_ &&
            isbinexp(current_)) {
 
         OPERATOR operator;
@@ -151,7 +151,7 @@ parseIf(AST_NODE* node) {
 
     node->type = AST_IF_STATEMENT;
 
-    AST_NODE* expression = parseExpression();
+    // AST_NODE* expression = parseExpression();
 
     AST_NODE* consequent = newNode();
     AST_NODE* alternate  = newNode();
@@ -218,7 +218,7 @@ parseCSV(AST_NODE* node) {
                 if (params == NULL) _RAISE(_INTERNAL_REALLOCATION_FAILED);
             }
 
-            params[properties->paramCount++] = tmp; // typedef char* IDENTIFIER/
+            params[properties->paramCount++] = tmp; /* typedef char* IDENTIFIER */
 
             if (isDeclaration)
                 printf(MAGENTA "[CSV] " RED "%s " BLUE "%s\n" RESET, (current_ - 1)->value, current_->value);
@@ -268,7 +268,7 @@ parseDefcl(AST_NODE* node) {
     if (istype(current_)) {
         // return type
 
-        char* type = current_->value;
+        // char* type = current_->value;
         nextToken();
 
         char* identifier = current_->value;
@@ -308,16 +308,17 @@ parseLiteral(AST_NODE* node) {
         Token* prev = (current_ - 1);
 
         if (istype(prev)) {
-            // variable declaration
-            node->type = AST_VARIABLE_DECLARATION;
+            /* variable declaration */
+            // TODO: VARIABLE_DECLARATION disregards the type, need to fix this
 
-            // VARIABLE_DECLARATION disregards the type, need to fix this
+            node->type = AST_VARIABLE_DECLARATION;
 
             parseAssignment(node);
             printAST(node);
         }
         else {
-            // variable assignment
+            /* variable assignment */
+            
             node->type = AST_VARIABLE_DECLARATION;
 
             parseAssignment(node);
@@ -326,7 +327,8 @@ parseLiteral(AST_NODE* node) {
     }
     else if
        (next_->type == TOK_LEFT_PARENTH) {
-           // function call
+           /* function call */
+
            node->type = AST_FUNCTION_CALL;
            
            char* literal = current_->value;
@@ -406,8 +408,8 @@ AST_NODE* parseStatement() {
     if (isnonkwd(current_)) {
         switch (current_->type) {
             case TOK_LITERAL:
-                // potentially special symbols classified as literals
-                // node->type set in parseLiteral
+                /* potentially special symbols classified as literals
+                   node->type set in parseLiteral */
 
                 parseLiteral(node); 
                 
@@ -419,15 +421,15 @@ AST_NODE* parseStatement() {
     else {
         switch (current_->type) {
             case TOK_IF:
-                // if statement
-                // node->type set in parseIf
+                /* if statement
+                   node->type set in parseIf */
 
                 parseIf(node); 
 
                 break;
 
             case TOK_RETURN:
-                // return statement
+                /* return statement */
 
                 node->type       = AST_RETURN_STATEMENT;
                 AST_NODE* retval = node->RETURN_STATEMENT_.retval;
@@ -441,8 +443,8 @@ AST_NODE* parseStatement() {
                 break;
 
             default:
-                // function definition / declaration
-                // node->type set in parseDefcl
+                /* function definition / declaration
+                   node->type set in parseDefcl */
 
                 parseDefcl(node); 
 

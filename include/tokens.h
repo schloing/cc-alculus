@@ -38,6 +38,4 @@ extern char    active;
 extern uint8_t row;
 extern uint8_t col;
 
-static inline TOK_TYPE keyword(const char* string);
-
 #endif
