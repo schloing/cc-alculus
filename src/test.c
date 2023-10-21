@@ -1,6 +1,3 @@
-/* better test suite
-https://c-testsuite.github.io/gcc-x86_64_report.html */
-
 int function_call(int a, int b);
 int x();
 
@@ -10,7 +7,7 @@ int main() {
 
     a = 1 * 23;
 
-    function_call(1, 2);
+    int x = function_call(1, 2);
 
     return a / b;
 }

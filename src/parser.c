@@ -37,7 +37,7 @@ void expect(const Token* token, const Token expectation) {
     if (token->type != expectation.type) {
         fprintf(stderr, RED "syntax error: expected token '%s' but got '%s' (ln. %d col. %d)\n" RESET, 
                 expectation.value, token->value, token->row, token->col);
-        exit(1);
+        _RAISE(_PARSER_SYNTAX_ERROR);
     }
 }
 
@@ -45,7 +45,7 @@ void consumeToken(Token token) {
     if (current_ != NULL && token.type != current_->type) {
         fprintf(stderr, RED "parser error: expected token '%s' (%d) but got '%s' (ln. %d col. %d)\n" RESET, 
                 token.value, token.type, current_->value, current_->row, current_->col);
-        exit(1);
+        _RAISE(_PARSER_SYNTAX_ERROR);
     }
 
     if (nextToken() == NULL)
@@ -97,7 +97,9 @@ AST_NODE* parsePrimaryExpression() {
             node->type              = AST_IDENTIFIER;
             node->IDENTIFIER_.value = current_->value;
 
+            parseLiteral(node);
             nextToken();
+
             break;
 
         case TOK_LEFT_PARENTH:
@@ -275,18 +277,21 @@ parseDefcl(AST_NODE* node) {
         if (current_->type == TOK_LEFT_PARENTH) {
             node->type = AST_FUNCTION_DECLARATION;
 
+            IDENTIFIER identifierNode = { .value = identifier };
+            node->FUNCTION_DECLARATION_.common.identifer = identifierNode;
+
             parseCSV(node); // parse comma-separated 'values' (arguments)
 
             if (current_->type == TOK_OPEN_CURLY) { 
                 /* do something with this function definition */
-                printf(GREEN "defined function " RED "%s " BLUE "%s\n" RESET, type, identifier);
             }
             else {
                 /* do something with this forward declaration */
                 expect(current_, newToken(";", TOK_SEMICOLON));
                 node->FUNCTION_DECLARATION_.isForward = true;
-                printf(MAGENTA "[forward] " GREEN "declared function " RED "%s " BLUE "%s\n" RESET, type, identifier);
             }
+
+            printAST(node);
         }
         else if
             (current_->type == TOK_EQUALS) {
@@ -300,7 +305,6 @@ parseDefcl(AST_NODE* node) {
 inline FORCE_GCC_INLINE void
 parseLiteral(AST_NODE* node) {
     if (next_->type == TOK_EQUALS) {
-        // TODO: differentiate between declaration and assignment in AST
         Token* prev = (current_ - 1);
 
         if (istype(prev)) {
@@ -324,13 +328,16 @@ parseLiteral(AST_NODE* node) {
        (next_->type == TOK_LEFT_PARENTH) {
            // function call
            node->type = AST_FUNCTION_CALL;
-
+           
            char* literal = current_->value;
+
+           IDENTIFIER identifierNode = { .value = literal };
+           node->FUNCTION_CALL_.common.identifer = identifierNode;
 
            printf(GREEN "called function " BLUE "%s\n" RESET, literal);
 
            nextToken();
-           parseCSV(node); // parseCSV only works for definitions and declarations
+           parseCSV(node);
        }
 }
 
@@ -373,6 +380,19 @@ void printAST(const AST_NODE* node) {
                     break;
                 default: break;
             }
+
+            break;
+        
+        case AST_FUNCTION_CALL:
+            break;
+
+        case AST_FUNCTION_DECLARATION:
+            char* identifier = node->FUNCTION_DECLARATION_.common.identifer.value;
+
+            if (node->FUNCTION_DECLARATION_.isForward)
+                printf(MAGENTA "[forward] " GREEN "declared function " RED "%s " BLUE "%s\n" RESET, "to_be_implemented", identifier);
+            else 
+                printf(GREEN "defined function " RED "%s " BLUE "%s\n" RESET, "to_be_implemented", identifier);
 
             break;
 
