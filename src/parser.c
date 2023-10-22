@@ -69,51 +69,51 @@ AST_NODE* parsePrimaryExpression() {
     AST_NODE* node = newNode();
 
     switch (current_->type) {
-        case TOK_NUMERICAL_LITERAL:
-            node->type        = AST_LITERAL;
-            bool isFractional = false;
+    case TOK_NUMERICAL_LITERAL:
+        node->type        = AST_LITERAL;
+        bool isFractional = false;
 
-            for (int i = 0; i < strlen(current_->value); i++)
-                if (current_->value[i] == '.') {
-                    isFractional = true;
-                    break;
-                }
-
-            if (isFractional) {
-                char* endptr;
-           
-                node->LITERAL_.active = DOUBLE;
-                node->LITERAL_.DOUBLE = strtod(current_->value, &endptr);
-            }
-            else {
-                node->LITERAL_.active = INT16;
-                node->LITERAL_.INT16  = atoi(current_->value);
+        for (int i = 0; i < strlen(current_->value); i++)
+            if (current_->value[i] == '.') {
+                isFractional = true;
+                break;
             }
 
-            nextToken();
-            break;
+        if (isFractional) {
+            char* endptr;
+        
+            node->LITERAL_.active = DOUBLE;
+            node->LITERAL_.DOUBLE = strtod(current_->value, &endptr);
+        }
+        else {
+            node->LITERAL_.active = INT16;
+            node->LITERAL_.INT16  = atoi(current_->value);
+        }
 
-        case TOK_LITERAL:
-            node->type              = AST_IDENTIFIER;
-            node->IDENTIFIER_.value = current_->value;
+        nextToken();
+        break;
 
-            parseLiteral(node);
-            nextToken();
+    case TOK_LITERAL:
+        node->type              = AST_IDENTIFIER;
+        node->IDENTIFIER_.value = current_->value;
 
-            break;
+        parseLiteral(node);
+        nextToken();
 
-        case TOK_LEFT_PARENTH:
-            consumeToken(newToken("(", TOK_LEFT_PARENTH));
+        break;
 
-            node = parseExpression();
-            
-            consumeToken(newToken(")", TOK_RIGHT_PARENTH));
-            break;
+    case TOK_LEFT_PARENTH:
+        consumeToken(newToken("(", TOK_LEFT_PARENTH));
 
-        default:
-            fprintf(stderr, RED "unexpected token '%s' (ln. %d col. %d)\n" RESET,
-                    current_->value, current_->row, current_->col);
-            exit(1);
+        node = parseExpression();
+        
+        consumeToken(newToken(")", TOK_RIGHT_PARENTH));
+        break;
+
+    default:
+        fprintf(stderr, RED "unexpected token '%s' (ln. %d col. %d)\n" RESET,
+                current_->value, current_->row, current_->col);
+        exit(1);
     }
 
     return node;
@@ -181,12 +181,12 @@ parseCSV(AST_NODE* node) {
     bool   isDeclaration = false;
 
     switch (node->type) {
-        case AST_FUNCTION_DECLARATION: properties    = &node->FUNCTION_DECLARATION_.common;
-                                       isDeclaration = true;
-                                       break;
-        case AST_FUNCTION_CALL:        properties    = &node->FUNCTION_CALL_.common;
-                                       break;
-        default: printf(RED "unexepected node->type for property\n"); exit(1);
+    case AST_FUNCTION_DECLARATION:  properties    = &node->FUNCTION_DECLARATION_.common;
+                                    isDeclaration = true;
+                                    break;
+    case AST_FUNCTION_CALL:         properties    = &node->FUNCTION_CALL_.common;
+                                    break;
+    default: _RAISE(_PARSER_SYNTAX_ERROR);
     }
 
     properties->paramSize  = 10; // arbitrary default size
@@ -245,11 +245,11 @@ ttop_literal(TOK_TYPE type) { // tokenizer to parser for literal
 /* inline FORCE_GCC_INLINE */ char
 ttop_operator(TOK_TYPE type) { // tokenizer to parser for operators
     switch (type) {
-        case TOK_ADDITION:    return '+';
-        case TOK_SUBTRACTION: return '-';
-        case TOK_ASTERISK:    return '*';
-        case TOK_DIVISION:    return '/';
-        default:              return '?';
+    case TOK_ADDITION:    return '+';
+    case TOK_SUBTRACTION: return '-';
+    case TOK_ASTERISK:    return '*';
+    case TOK_DIVISION:    return '/';
+    default:              return '?';
     }
 }
 
@@ -444,48 +444,48 @@ AST_NODE* parseStatement() {
 
     if (isnonkwd(current_)) {
         switch (current_->type) {
-            case TOK_LITERAL:
-                /* potentially special symbols classified as literals
-                   node->type set in parseLiteral */
+        case TOK_LITERAL:
+            /* potentially special symbols classified as literals
+                node->type set in parseLiteral */
 
-                parseLiteral(node); 
-                
-                break;
+            parseLiteral(node); 
+            
+            break;
 
-            default: break;
+        default: break;
         }
     } 
     else {
         switch (current_->type) {
-            case TOK_IF:
-                /* if statement
-                   node->type set in parseIf */
+        case TOK_IF:
+            /* if statement
+                node->type set in parseIf */
 
-                parseIf(node); 
+            parseIf(node); 
 
-                break;
+            break;
 
-            case TOK_RETURN:
-                /* return statement */
+        case TOK_RETURN:
+            /* return statement */
 
-                node->type       = AST_RETURN_STATEMENT;
-                AST_NODE* retval = node->RETURN_STATEMENT_.retval;
-                
-                nextToken();
-                retval = parseExpression();
-             
-                printf(GREEN "returning value " RESET);
-                printAST(retval); printf("\n");
+            node->type       = AST_RETURN_STATEMENT;
+            AST_NODE* retval = node->RETURN_STATEMENT_.retval;
+            
+            nextToken();
+            retval = parseExpression();
+            
+            printf(GREEN "returning value " RESET);
+            printAST(retval); printf("\n");
 
-                break;
+            break;
 
-            default:
-                /* function definition / declaration
-                   node->type set in parseDefcl */
+        default:
+            /* function definition / declaration
+                node->type set in parseDefcl */
 
-                parseDefcl(node); 
+            parseDefcl(node); 
 
-                break;
+            break;
         }
     }
 
