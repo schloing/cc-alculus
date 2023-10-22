@@ -345,7 +345,7 @@ parseLiteral(AST_NODE* node) {
            node->FUNCTION_CALL_.common.identifer = identifierNode;
 
            nextToken();
-           
+
            parseCSV(node);
            printAST(node);
        }
@@ -362,7 +362,7 @@ char* literaltochar(LITERAL_FLAG flag) {
     case CHAR:   return "char";
     case STRING: return "char*";
     case VOID:   return "void";
-    case NONETYPE: _RAISE(_PARSER_SYNTAX_ERROR);
+    case NONETYPE: return "none?";
     }
 }
 
