@@ -3,21 +3,22 @@
 
 #include <stdlib.h>
 
-#define _INTERNAL_TOKENIZER_ERROR     0xA
-#define _INTERNAL_PARSER_ERROR        0xB
-#define _INTERNAL_REALLOCATION_FAILED 0xC
-#define _INTERNAL_ALLOCATION_FAILED   0xD
+#define _INTERNAL_TOKENIZER_ERROR     10
+#define _INTERNAL_PARSER_ERROR        11
+#define _INTERNAL_REALLOCATION_FAILED 12
+#define _INTERNAL_ALLOCATION_FAILED   13
 
-#define _PARSER_SYNTAX_ERROR          0xAA
+#define _PARSER_SYNTAX_ERROR          100
 
-void _RAISE(uint16_t ERRNO) {
-    if (ERRNO == _INTERNAL_REALLOCATION_FAILED) {
-        fprintf(stderr, RED "reallocation failed %s %d\n", __func__, __LINE__);
-    }
-
+void _RAISEFN(uint16_t ERRNO) {
     fflush(stdout);
     fflush(stderr);
+    
     exit(ERRNO);
 }
+
+#define _RAISE(ERR)                                                               \
+    fprintf(stderr, RED "fatal error " BLUE "in %s, ln %d\n", __func__, __LINE__); \
+    _RAISEFN(ERR);
 
 #endif

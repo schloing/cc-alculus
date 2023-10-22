@@ -38,6 +38,7 @@ typedef TOK_TYPE OPERATOR; // trust compiler to only set OPERATOR to
 struct LITERAL {
     LITERAL_FLAG active;
     uint8_t      flags;
+    char*        value;
 
     union {
         double   DOUBLE;
@@ -53,14 +54,12 @@ struct LITERAL {
 };
 
 typedef struct {
-    // a bare literal is exactly that: a bare literal,
-    // whereas an identifier is a variable of some type
-    // denoted by the member struct LITERAL type.
+    union {
+        struct LITERAL idir_type; // indirect
+        LITERAL_FLAG   dir_type; // direct
+    };
 
-    // char* a_string_variable = "hello world";
-    // "hello world" (bare literal) vs a_string_variable (identifier)
-
-    struct LITERAL type;
+    bool           isdirect;
     char*          value;
 } IDENTIFIER;
 
@@ -77,6 +76,8 @@ struct FUNCTION_COMMON {
     IDENTIFIER* params;
     size_t      paramCount;
     size_t      paramSize;
+
+    LITERAL_FLAG type;
 };
 
 struct FUNCTION_DECLARATION {
@@ -148,6 +149,7 @@ AST_NODE* parseStatement();
 // utilty functions
 LITERAL_FLAG ttop_literal(TOK_TYPE type);
 char ttop_operator(TOK_TYPE type);
+char* literaltochar(LITERAL_FLAG type);
 
 // parsing expressions
 void parse();

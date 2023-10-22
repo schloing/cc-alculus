@@ -203,7 +203,8 @@ parseCSV(AST_NODE* node) {
         // push current token as an argument
 
         if (istype(current_)) {
-            tmp.type.active = ttop_literal(current_->type);
+            tmp.isdirect = true;
+            tmp.dir_type = ttop_literal(current_->type);
         }
         else if 
            (current_->type == TOK_LITERAL ||
@@ -268,19 +269,26 @@ parseDefcl(AST_NODE* node) {
     if (istype(current_)) {
         // return type
 
-        // char* type = current_->value;
+        Token        type    = *current_;
+        LITERAL_FLAG typelit = ttop_literal(type.type);
+        
         nextToken();
 
-        char* identifier = current_->value;
+        Token identifier = *current_;
+        char* identstr   = identifier.value;
+
         nextToken();
 
         if (current_->type == TOK_LEFT_PARENTH) {
             node->type = AST_FUNCTION_DECLARATION;
 
-            IDENTIFIER identifierNode = { .value = identifier };
-            node->FUNCTION_DECLARATION_.common.identifer = identifierNode;
+            IDENTIFIER identnode = { .value  = identstr };
 
-            parseCSV(node); // parse comma-separated 'values' (arguments)
+            node->FUNCTION_DECLARATION_.common.identifer = identnode;
+            node->FUNCTION_DECLARATION_.common.type      = typelit;
+
+            // parse comma-separated 'values' (arguments)
+            parseCSV(node);
 
             if (current_->type == TOK_OPEN_CURLY) { 
                 /* do something with this function definition */
@@ -336,69 +344,98 @@ parseLiteral(AST_NODE* node) {
            IDENTIFIER identifierNode = { .value = literal };
            node->FUNCTION_CALL_.common.identifer = identifierNode;
 
-           printf(GREEN "called function " BLUE "%s\n" RESET, literal);
-
            nextToken();
+           
            parseCSV(node);
+           printAST(node);
        }
+}
+
+char* literaltochar(LITERAL_FLAG flag) {
+    switch (flag) {
+    case DOUBLE: return "double";
+    case FLOAT:  return "FLOAT";
+    case INT8:   return "int8_t";
+    case INT16:  return "int16_t";
+    case INT32:  return "int32_t";
+    case INT64:  return "int64_t";
+    case CHAR:   return "char";
+    case STRING: return "char*";
+    case VOID:   return "void";
+    case NONETYPE: _RAISE(_PARSER_SYNTAX_ERROR);
+    }
 }
 
 void printAST(const AST_NODE* node) {
     if (node == NULL) return;
 
     switch (node->type) {
-        case AST_VARIABLE_DECLARATION:
-            printf(BLUE "%s" GREEN " assigned value " RESET, node->VARIABLE_DECLARATION_.identifier.value);
-       
-            printAST(node->VARIABLE_DECLARATION_.init);
-           
-            printf("\n");
-
-            break;
-
-        case AST_BINARY_EXPRESSION:
-            printAST(node->BINARY_EXPRESSION_.left);
-
-            char operatorStr = ttop_operator(node->BINARY_EXPRESSION_.operator_);
-          
-            printf("%c", operatorStr);
-            
-            printAST(node->BINARY_EXPRESSION_.right);
-
-            break;
-
-        case AST_IDENTIFIER:
-            printf(BLUE "%s" RESET, node->IDENTIFIER_.value); 
-            
-            break;
+    case AST_VARIABLE_DECLARATION:
+        printf(BLUE "%s" GREEN " assigned value " RESET, node->VARIABLE_DECLARATION_.identifier.value);
     
-        case AST_LITERAL:
-            switch (node->LITERAL_.active) {
-                case INT16: 
-                    printf(BLUE "%d" RESET, node->LITERAL_.INT16);
-                    break;
-                case DOUBLE:
-                    printf(BLUE "%f" RESET, node->LITERAL_.DOUBLE);
-                    break;
-                default: break;
-            }
-
-            break;
+        printAST(node->VARIABLE_DECLARATION_.init);
         
-        case AST_FUNCTION_CALL:
-            break;
+        printf("\n");
 
-        case AST_FUNCTION_DECLARATION:
-            char* identifier = node->FUNCTION_DECLARATION_.common.identifer.value;
+        break;
 
-            if (node->FUNCTION_DECLARATION_.isForward)
-                printf(MAGENTA "[forward] " GREEN "declared function " RED "%s " BLUE "%s\n" RESET, "to_be_implemented", identifier);
-            else 
-                printf(GREEN "defined function " RED "%s " BLUE "%s\n" RESET, "to_be_implemented", identifier);
+    case AST_BINARY_EXPRESSION:
+        printAST(node->BINARY_EXPRESSION_.left);
 
-            break;
+        char operatorStr = ttop_operator(node->BINARY_EXPRESSION_.operator_);
+        
+        printf("%c", operatorStr);
+        
+        printAST(node->BINARY_EXPRESSION_.right);
 
-        default: break;
+        break;
+
+    case AST_IDENTIFIER:
+        printf(BLUE "%s" RESET, node->IDENTIFIER_.value); 
+        
+        break;
+
+    case AST_LITERAL:
+        switch (node->LITERAL_.active) {
+            case INT16: 
+                printf(BLUE "%d" RESET, node->LITERAL_.INT16);
+                break;
+            case DOUBLE:
+                printf(BLUE "%f" RESET, node->LITERAL_.DOUBLE);
+                break;
+            default: break;
+        }
+
+        break;
+    
+    case AST_FUNCTION_CALL: 
+    {
+        char*         identifier = node->FUNCTION_CALL_.common.identifer.value;
+        LITERAL_FLAG  type       = node->FUNCTION_CALL_.common.type;
+
+        char* typestr = literaltochar(type);
+
+        printf(GREEN "called function " RED "%s " BLUE "%s\n" RESET, typestr, identifier);
+
+        break;
+    }
+
+    case AST_FUNCTION_DECLARATION:
+    {
+        char*         identifier = node->FUNCTION_DECLARATION_.common.identifer.value;
+        LITERAL_FLAG  type       = node->FUNCTION_DECLARATION_.common.type;
+
+        char* typestr = literaltochar(type);
+
+        if (node->FUNCTION_DECLARATION_.isForward)
+            printf(MAGENTA "[forward] " GREEN "declared function " RED "%s " BLUE "%s\n" RESET, typestr, identifier);
+        else 
+            printf(GREEN "defined function " RED "%s " BLUE "%s\n" RESET, typestr, identifier);
+
+        break;
+    }
+    
+    default: break;
     }
 }
 
