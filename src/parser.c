@@ -304,11 +304,12 @@ parseDefcl(AST_NODE* node) {
         }
         else if
             (current_->type == TOK_EQUALS) {
-                
                 next_ = current_;
                 current_ -= 1;
                 
-                parseStatement();
+                node->type = AST_VARIABLE_DECLARATION;
+
+                parseAssignment(node);
             }
     }
 }
@@ -316,23 +317,11 @@ parseDefcl(AST_NODE* node) {
 /* inline FORCE_GCC_INLINE */ void
 parseLiteral(AST_NODE* node) {
     if (next_->type == TOK_EQUALS) {
-        Token* prev = (current_ - 1);
+        /* variable assignment */
+        
+        node->type = AST_VARIABLE_DECLARATION;
 
-        if (istype(prev)) {
-            /* variable declaration */
-            // TODO: VARIABLE_DECLARATION disregards the type, need to fix this
-
-            node->type = AST_VARIABLE_DECLARATION;
-
-            parseAssignment(node);
-        }
-        else {
-            /* variable assignment */
-            
-            node->type = AST_VARIABLE_DECLARATION;
-
-            parseAssignment(node);
-        }
+        parseAssignment(node);
     }
     else if
        (next_->type == TOK_LEFT_PARENTH) {
@@ -348,8 +337,11 @@ parseLiteral(AST_NODE* node) {
             nextToken();
 
             parseCSV(node);
-
        }
+    else {
+        // set node->type to AST_NONE
+        node->type = AST_NONE;
+    }
 }
 
 char* literaltochar(LITERAL_FLAG flag) {
@@ -369,6 +361,7 @@ char* literaltochar(LITERAL_FLAG flag) {
 
 void printAST(const AST_NODE* node) {
     if (node == NULL) return;
+    if (node->type == AST_NONE) return;
 
     switch (node->type) {
     case AST_VARIABLE_DECLARATION:
@@ -485,10 +478,12 @@ AST_NODE* parseStatement() {
             break;
 
         default:
+            // this could be a variable or a function declaration
+
             /* function definition / declaration
                 node->type set in parseDefcl */
 
-            parseDefcl(node); 
+            parseDefcl(node);
 
             break;
         }
