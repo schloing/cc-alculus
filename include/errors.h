@@ -17,7 +17,7 @@ void _RAISEFN(uint16_t ERRNO) {
     exit(ERRNO);
 }
 
-#define _RAISE(ERR)                                                               \
+#define _RAISE(ERR)                                                                \
     fprintf(stderr, RED "fatal error " BLUE "in %s, ln %d\n", __func__, __LINE__); \
     _RAISEFN(ERR);
 

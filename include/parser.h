@@ -6,6 +6,7 @@
 #include "parser_forwards.h"
 
 typedef enum {
+    AST_NONE,
     AST_BINARY_EXPRESSION,
     AST_BLOCK_STATEMENT,
     AST_FUNCTION_CALL,
@@ -170,7 +171,8 @@ void freeAST(AST_NODE* node);
 
 // globals
 extern AST_NODE* AST;
-extern size_t AST_position;
-extern size_t AST_size;
+extern size_t    AST_position;
+extern size_t    AST_size;
+extern AST_TYPE  context;
 
 #endif

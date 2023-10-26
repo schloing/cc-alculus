@@ -20,7 +20,7 @@
 
 Token*   current_ = NULL;
 Token*   next_    = NULL;
-TOK_TYPE type     = 0;
+AST_TYPE context  = AST_NONE;
 
 int i = 0; // index in token sequence
 
@@ -269,6 +269,8 @@ parseDefcl(AST_NODE* node) {
     if (istype(current_)) {
         // return type
 
+        context = AST_RETURN_STATEMENT;
+
         Token        type    = *current_;
         LITERAL_FLAG typelit = ttop_literal(type.type);
         
@@ -289,6 +291,8 @@ parseDefcl(AST_NODE* node) {
 
             // parse comma-separated 'values' (arguments)
             parseCSV(node);
+            
+            context = AST_FUNCTION_DECLARATION;
 
             if (current_->type == TOK_OPEN_CURLY) { 
                 /* do something with this function definition */
@@ -303,8 +307,11 @@ parseDefcl(AST_NODE* node) {
         }
         else if
             (current_->type == TOK_EQUALS) {
+                context = AST_VARIABLE_DECLARATION;
+                
                 next_ = current_;
                 current_ -= 1;
+                
                 parseStatement();
             }
     }
@@ -319,6 +326,7 @@ parseLiteral(AST_NODE* node) {
             /* variable declaration */
             // TODO: VARIABLE_DECLARATION disregards the type, need to fix this
 
+            context = AST_VARIABLE_DECLARATION;
             node->type = AST_VARIABLE_DECLARATION;
 
             parseAssignment(node);
@@ -327,6 +335,7 @@ parseLiteral(AST_NODE* node) {
         else {
             /* variable assignment */
             
+            context = AST_VARIABLE_DECLARATION;
             node->type = AST_VARIABLE_DECLARATION;
 
             parseAssignment(node);
@@ -337,17 +346,19 @@ parseLiteral(AST_NODE* node) {
        (next_->type == TOK_LEFT_PARENTH) {
            /* function call */
 
-           node->type = AST_FUNCTION_CALL;
-           
-           char* literal = current_->value;
+            node->type = AST_FUNCTION_CALL;
 
-           IDENTIFIER identifierNode = { .value = literal };
-           node->FUNCTION_CALL_.common.identifer = identifierNode;
+            char* literal = current_->value;
 
-           nextToken();
+            IDENTIFIER identifierNode = { .value = literal };
+            node->FUNCTION_CALL_.common.identifer = identifierNode;
 
-           parseCSV(node);
-           printAST(node);
+            nextToken();
+
+            parseCSV(node);
+            if (context != AST_VARIABLE_DECLARATION) printAST(node);
+
+            context = AST_FUNCTION_CALL;
        }
 }
 
@@ -397,13 +408,13 @@ void printAST(const AST_NODE* node) {
 
     case AST_LITERAL:
         switch (node->LITERAL_.active) {
-            case INT16: 
-                printf(BLUE "%d" RESET, node->LITERAL_.INT16);
-                break;
-            case DOUBLE:
-                printf(BLUE "%f" RESET, node->LITERAL_.DOUBLE);
-                break;
-            default: break;
+        case INT16: 
+            printf(BLUE "%d" RESET, node->LITERAL_.INT16);
+            break;
+        case DOUBLE:
+            printf(BLUE "%f" RESET, node->LITERAL_.DOUBLE);
+            break;
+        default: break;
         }
 
         break;
@@ -411,11 +422,16 @@ void printAST(const AST_NODE* node) {
     case AST_FUNCTION_CALL: 
     {
         char*         identifier = node->FUNCTION_CALL_.common.identifer.value;
-        LITERAL_FLAG  type       = node->FUNCTION_CALL_.common.type;
 
-        char* typestr = literaltochar(type);
+/*      node->FUNCTION_CALL_.common.type should technically never be set by this point.
 
-        printf(GREEN "called function " RED "%s " BLUE "%s\n" RESET, typestr, identifier);
+        LITERAL_FLAG  type    = node->FUNCTION_CALL_.common.type;
+        char*         typestr = literaltochar(type);
+*/
+        // function calls would NOT have a definite type
+        // queue this function to figure out retval from definition
+
+        printf(GREEN "called function " RED "%s " BLUE "%s\n" RESET, "none?", identifier);
 
         break;
     }
@@ -457,6 +473,8 @@ AST_NODE* parseStatement() {
     } 
     else {
         switch (current_->type) {
+        case TOK_SEMICOLON:
+            context = AST_NONE; break;
         case TOK_IF:
             /* if statement
                 node->type set in parseIf */
@@ -521,6 +539,7 @@ void push(AST_NODE* parent, AST_NODE* child) {
     }
 
     child->parent = parent;
+
     parent->children[parent->children_count] = *child;
     parent->children_count++;
 }
