@@ -9,7 +9,7 @@ int main() {
 
     function_call(1, 2);
 
-    int x = function_call(3, 4);
+    int y = function_call(3, 4);
 
     return a / b;
 }

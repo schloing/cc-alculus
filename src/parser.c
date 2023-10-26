@@ -18,9 +18,11 @@
 #define FORCE_GCC_INLINE __attribute__((always_inline))
 #endif
 
+// todo: make this actually work
+#define PRINT_AST_CSV 0
+
 Token*   current_ = NULL;
 Token*   next_    = NULL;
-AST_TYPE context  = AST_NONE;
 
 int i = 0; // index in token sequence
 
@@ -221,10 +223,10 @@ parseCSV(AST_NODE* node) {
 
             params[properties->paramCount++] = tmp; /* typedef char* IDENTIFIER */
 
-            if (isDeclaration)
-                printf(MAGENTA "[CSV] " RED "%s " BLUE "%s\n" RESET, (current_ - 1)->value, current_->value);
-            else
-                printf(MAGENTA "[CSV] " BLUE "%s\n" RESET, current_->value);
+            // if (isDeclaration)
+            //     printf(MAGENTA "[CSV] " RED "%s " BLUE "%s\n" RESET, (current_ - 1)->value, current_->value);
+            // else
+            //     printf(MAGENTA "[CSV] " BLUE "%s\n" RESET, current_->value);
         }
 
         nextToken();
@@ -269,8 +271,6 @@ parseDefcl(AST_NODE* node) {
     if (istype(current_)) {
         // return type
 
-        context = AST_RETURN_STATEMENT;
-
         Token        type    = *current_;
         LITERAL_FLAG typelit = ttop_literal(type.type);
         
@@ -291,8 +291,6 @@ parseDefcl(AST_NODE* node) {
 
             // parse comma-separated 'values' (arguments)
             parseCSV(node);
-            
-            context = AST_FUNCTION_DECLARATION;
 
             if (current_->type == TOK_OPEN_CURLY) { 
                 /* do something with this function definition */
@@ -303,11 +301,9 @@ parseDefcl(AST_NODE* node) {
                 node->FUNCTION_DECLARATION_.isForward = true;
             }
 
-            printAST(node);
         }
         else if
             (current_->type == TOK_EQUALS) {
-                context = AST_VARIABLE_DECLARATION;
                 
                 next_ = current_;
                 current_ -= 1;
@@ -326,20 +322,16 @@ parseLiteral(AST_NODE* node) {
             /* variable declaration */
             // TODO: VARIABLE_DECLARATION disregards the type, need to fix this
 
-            context = AST_VARIABLE_DECLARATION;
             node->type = AST_VARIABLE_DECLARATION;
 
             parseAssignment(node);
-            printAST(node);
         }
         else {
             /* variable assignment */
             
-            context = AST_VARIABLE_DECLARATION;
             node->type = AST_VARIABLE_DECLARATION;
 
             parseAssignment(node);
-            printAST(node);
         }
     }
     else if
@@ -356,9 +348,7 @@ parseLiteral(AST_NODE* node) {
             nextToken();
 
             parseCSV(node);
-            if (context != AST_VARIABLE_DECLARATION) printAST(node);
 
-            context = AST_FUNCTION_CALL;
        }
 }
 
@@ -473,8 +463,6 @@ AST_NODE* parseStatement() {
     } 
     else {
         switch (current_->type) {
-        case TOK_SEMICOLON:
-            context = AST_NONE; break;
         case TOK_IF:
             /* if statement
                 node->type set in parseIf */
@@ -493,7 +481,6 @@ AST_NODE* parseStatement() {
             retval = parseExpression();
             
             printf(GREEN "returning value " RESET);
-            printAST(retval); printf("\n");
 
             break;
 
@@ -551,6 +538,7 @@ void parse() {
     while (nextToken() != NULL) {
         AST_NODE* node = parseStatement();
 
+        printAST(node);
 
         AST_PUSH(node);
     }
