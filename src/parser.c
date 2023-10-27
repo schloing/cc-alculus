@@ -404,7 +404,7 @@ void printAST(const AST_NODE* node) {
     
     case AST_FUNCTION_CALL: 
     {
-        char*         identifier = node->FUNCTION_CALL_.common.identifer.value;
+        char* identifier = node->FUNCTION_CALL_.common.identifer.value;
 
 /*      node->FUNCTION_CALL_.common.type should technically never be set by this point.
 
@@ -414,7 +414,18 @@ void printAST(const AST_NODE* node) {
         // function calls would NOT have a definite type
         // queue this function to figure out retval from definition
 
-        printf(GREEN "called function " RED "%s " BLUE "%s\n" RESET, "none?", identifier);
+        printf(GREEN "called function " RED "%s " BLUE "%s" RESET, "none?", identifier);
+
+        printf("(");
+
+        for (int i = 0; i < node->FUNCTION_CALL_.common.paramCount; i++) {
+            IDENTIFIER* param = &node->FUNCTION_CALL_.common.params[i];
+
+            printf(BLUE "%s" RESET, param->value);
+            if (i < node->FUNCTION_CALL_.common.paramCount - 1) printf(",");
+        }
+
+        printf(")\n");
 
         break;
     }
@@ -427,9 +438,20 @@ void printAST(const AST_NODE* node) {
         char* typestr = literaltochar(type);
 
         if (node->FUNCTION_DECLARATION_.isForward)
-            printf(MAGENTA "[forward] " GREEN "declared function " RED "%s " BLUE "%s\n" RESET, typestr, identifier);
+            printf(MAGENTA "[forward] " GREEN "declared function " RED "%s " BLUE "%s" RESET, typestr, identifier);
         else 
-            printf(GREEN "defined function " RED "%s " BLUE "%s\n" RESET, typestr, identifier);
+            printf(GREEN "defined function " RED "%s " BLUE "%s" RESET, typestr, identifier);
+
+        printf("(");
+
+        for (int i = 0; i < node->FUNCTION_CALL_.common.paramCount; i++) {
+            IDENTIFIER* param = &node->FUNCTION_CALL_.common.params[i];
+
+            printf(BLUE "%s" RESET, param->value);
+            if (i < node->FUNCTION_CALL_.common.paramCount - 1) printf(",");
+        }
+
+        printf(")\n");
 
         break;
     }
