@@ -7,12 +7,8 @@
 set -x
 
 yasm -f elf64 $1.asm
-gcc -no-pie -o "$1.out" "$1.o" -lm
-# ld -o $1.out $1.o
+gcc -no-pie -fno-pie -nostartfiles compilation.c $1.o
 
-rm $1.o
+# objdump -D $1.out -M intel
 
-objdump -D $1.out -M intel
-
-./$1.out
 echo $?
