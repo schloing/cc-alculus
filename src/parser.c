@@ -13,16 +13,18 @@
 #include "../include/stdout.h"
 #include "../include/errors.h"
 
-// need to test on other compilers
 #if defined(__GNUC__) || defined(__GNUG__) && !defined(__clang__)
+// not forcing inline anymore
+// trust that the compiler will apply these optimisations
 #define FORCE_GCC_INLINE __attribute__((always_inline))
 #endif
 
-// todo: make this actually work
-#define PRINT_AST_CSV 0
+#ifdef DISABLE_PRINTF
+#define printf(fmt, ...) (0)
+#endif
 
-Token*   current_ = NULL;
-Token*   next_    = NULL;
+Token* current_ = NULL;
+Token* next_    = NULL;
 
 int i = 0; // index in token sequence
 
