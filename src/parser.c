@@ -23,6 +23,12 @@
 #define printf(fmt, ...) (0)
 #endif
 
+#ifdef DEBUG
+#define printf_d(fmt, ...) printf(fmt, __VA_ARGS__)
+#else
+#define printf_d(fmt, ...) do {} while (0)
+#endif
+
 Token* current_ = NULL;
 Token* next_    = NULL;
 
@@ -466,7 +472,30 @@ AST_NODE* parseStatement() {
     AST_NODE* node = newNode();
 
     if (isnonkwd(current_)) {
-        switch (current_->type) {
+        switch (current_->type) {    
+        case TOK_DIVISION:
+            /* comments */
+
+            if (next_->type == TOK_DIVISION) {
+                bool endComment = false;
+
+                while(!endComment) {
+                    printf_d("%s (%d) %s (%d)\n", current_->value, current_->row, 
+                                                next_->value,    next_->row);
+
+                    if (current_->row == next_->row) {
+                        nextToken();
+                        continue;
+                    }
+
+                    endComment = true;
+                }
+
+                printf_d("\n");
+            }
+
+            break;
+
         case TOK_LITERAL:
             /* potentially special symbols classified as literals
                 node->type set in parseLiteral */
