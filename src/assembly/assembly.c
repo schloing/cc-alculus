@@ -4,15 +4,13 @@
 
 #include "../../include/tokens.h"
 
+FILE* binary = NULL;
+
 // this function name is misleading
 // will change later
 void createBinary() {
     char* dot = strrchr(buffname, '.');
     if (dot == NULL) exit(1); // woah...
-
-    // new string has a size of the base
-    // filename, plus strlen("asm")
-    // (which is equivalent to 3 + 1 for \0
 
     size_t base = dot - buffname;
     char*  new  = (char*)malloc(base + 1 + 3 + 1);
@@ -31,7 +29,13 @@ void createBinary() {
         perror("failed to create binary");
         exit(1);
     }
+
+    binary = out;
 }
 
-void appendBoiler();
-
+void appendBoiler() {
+    char* boiler = "global _start"\
+                   "section .text"\
+                   "_start:";
+    fputs("hello world", binary);
+}
