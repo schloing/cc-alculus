@@ -2,8 +2,32 @@
 #include <stdlib.h>
 #include <string.h>
 
+#ifdef LINKING_CCALC
 #include "../../include/tokens.h"
+#endif
 
+#define PROGRAM_ENTRY             "global _start\n"  \
+                                  "section .text\n"
+
+#define PROGRAM__START            "_start:\n"
+#define CALL__MAIN                "call main\n" // argc, argv not accounted for
+
+#define SETREG(reg, value)        "mov " reg ", " value "\n"
+
+#define CREATE_STACK_FRAME(bytes) "push rbp\n"       \
+                                  "mov rbp, rsp\n"   \
+                                  "sub rsp, " #bytes "\n"
+
+#define CLEAN_EXIT                "mov rax, 60\n"    \
+                                  "syscall\n"
+
+int main() {
+    char out[] = PROGRAM_ENTRY PROGRAM__START CALL__MAIN SETREG("rdi", "rax") CLEAN_EXIT;
+    printf("%s\n", out);
+    return 0;
+}
+
+#ifdef LINKING_CCALC
 FILE* binary = NULL;
 
 // this function name is misleading
@@ -22,7 +46,7 @@ void createBinary() {
     strcat(new, "asm");
 
     FILE* out = fopen(new, "w");
-    
+
     free(new);
 
     if (out == NULL) {
@@ -35,7 +59,8 @@ void createBinary() {
 
 void appendBoiler() {
     char* boiler = "global _start"\
-                   "section .text"\
-                   "_start:";
+                    "section .text"\
+                    "_start:";
     fputs("hello world", binary);
 }
+#endif
