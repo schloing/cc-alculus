@@ -148,7 +148,9 @@ void tokenize() {
 }
 
 void openBuffer(const char* source) {
-    buffer = fopen(source, "rb");
+    buffname = strdup((char*)source);
+    buffer   = fopen(source, "rb");
+    
     printf("opened buffer \"%s\"\n", source); 
 }
 

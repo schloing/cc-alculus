@@ -2,7 +2,10 @@
 #define PARSER_H
 
 #include <stdint.h>
+#include <stdbool.h>
+
 #include "tokens.h"
+#include "types.h"
 #include "parser_forwards.h"
 
 typedef enum {
@@ -31,13 +34,13 @@ typedef enum {
     CHAR, STRING,
     // type denotation only
     VOID,
-} LITERAL_FLAG;
+} CC_TYPE;
 
 typedef TOK_TYPE OPERATOR; // trust compiler to only set OPERATOR to
                            // operator TOK_TYPE's
 
 struct LITERAL {
-    LITERAL_FLAG active;
+    CC_TYPE      active;
     uint8_t      flags;
     char*        value;
 
@@ -57,11 +60,11 @@ struct LITERAL {
 typedef struct {
     union {
         struct LITERAL idir_type; // indirect
-        LITERAL_FLAG   dir_type; // direct
+        CC_TYPE        dir_type;  // direct
     };
 
-    bool           isdirect;
-    char*          value;
+    bool    isdirect;
+    char*   value;
 } IDENTIFIER;
 
 // NOTE:
@@ -78,7 +81,7 @@ struct FUNCTION_COMMON {
     size_t      paramCount;
     size_t      paramSize;
 
-    LITERAL_FLAG type;
+    CC_TYPE type;
 };
 
 struct FUNCTION_DECLARATION {
@@ -136,8 +139,8 @@ struct AST_NODE {
 
 // iterating through tokens
 Token* nextToken();
-void expect(const Token* token, const Token expectation);
-void consumeToken(const Token token);
+void   expect(const Token* token, const Token expectation);
+void   consumeToken(const Token token);
 
 // modification of ast nodes
 AST_NODE* newNode();
@@ -148,9 +151,9 @@ AST_NODE* parseStatement();
 // gcc will auto-inline functions it thinks fit
 
 // utilty functions
-LITERAL_FLAG ttop_literal(TOK_TYPE type);
-char ttop_operator(TOK_TYPE type);
-char* literaltochar(LITERAL_FLAG type);
+CC_TYPE ttop_literal(TOK_TYPE type);
+char    ttop_operator(TOK_TYPE type);
+char*   literaltochar(CC_TYPE type);
 
 // parsing expressions
 void parse();

@@ -10,12 +10,23 @@ void emitAST(const AST_NODE* node) {
     if (node->type == AST_NONE) return;
 
     switch (node->type) {
-    case AST_VARIABLE_DECLARATION:
+    case AST_VARIABLE_DECLARATION: 
+    {
         // varname node->VARIABLE_DECLARATION_.identifier.value
         // varval  node->VARIABLE_DECLARATION_.init (AST_NODE)
 
-        break;
+        // push ebp
+        // mov  ebp, esp
+        // sub  esp, [ebp - *total stack frame size*]
 
+        // mov DWORD PTR [ebp - *calculated offset*], value
+
+        IDENTIFIER* identifier = &node->VARIABLE_DECLARATION_.identifier;
+
+        // identifier->isdirect ? identifier->dir_type
+
+        break;
+    }
     case AST_BINARY_EXPRESSION:
         // binexpleft node->BINARY_EXPRESSION_.left      (AST_NODE)
         // binexpop   node->BINARY_EXPRESSION_.operator_ (ttop(.) -> str)

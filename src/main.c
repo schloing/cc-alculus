@@ -19,7 +19,8 @@ void freeTokens() {
 }
 
 void freeAST(AST_NODE* node) {
-    if (node == NULL) return;
+    if (node == NULL || node->children == NULL) 
+        return;
 
     for (int i = 0; i < node->children_count; i++)
         freeAST(&node->children[i]);
@@ -49,6 +50,7 @@ int main() {
     parse      ();
     freeTokens (/* token_sequence */);
     freeAST    (AST);
+    free       (buffname);
     fclose     (buffer);
 
     return 0;
