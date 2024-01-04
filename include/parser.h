@@ -27,15 +27,6 @@ typedef enum {
 #define CONST_VAR    0x2
 #define POINTER      0x3
 
-typedef enum {
-    NONETYPE,
-    DOUBLE, FLOAT,
-    INT8, INT16, INT32, INT64,
-    CHAR, STRING,
-    // type denotation only
-    VOID,
-} CC_TYPE;
-
 typedef TOK_TYPE OPERATOR; // trust compiler to only set OPERATOR to
                            // operator TOK_TYPE's
 

@@ -15,13 +15,13 @@ void emitAST(const AST_NODE* node) {
         // varname node->VARIABLE_DECLARATION_.identifier.value
         // varval  node->VARIABLE_DECLARATION_.init (AST_NODE)
 
-        // push ebp
-        // mov  ebp, esp
-        // sub  esp, [ebp - *total stack frame size*]
-
         // mov DWORD PTR [ebp - *calculated offset*], value
 
         IDENTIFIER* identifier = &node->VARIABLE_DECLARATION_.identifier;
+        uint8_t     sizeof_i   = CC_SIZEOF(identifier->dir_type);
+
+        // get context of stack from parent
+        // store self in stack
 
         // identifier->isdirect ? identifier->dir_type
 
@@ -58,6 +58,16 @@ void emitAST(const AST_NODE* node) {
         // funcname node->FUNCTION_CALL_.common.identifer.value
         // params   node->FUNCTION_CALL_.common.params[ [0, node->FUNCTION_CALL_.common.paramCount) ]
         // functype node->FUNCTION_DECLARATION_.common.type (literaltochar(.) -> str)
+
+        // for definitions...
+
+        // push ebp
+        // mov  ebp, esp
+        // sub  esp, [ebp - *total stack frame size*]
+    // ...
+        // mov eax, *retval*
+        // pop rbp
+        // ret
 
         break;
     }

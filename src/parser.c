@@ -19,15 +19,7 @@
 #define FORCE_GCC_INLINE __attribute__((always_inline))
 #endif
 
-#ifdef DISABLE_PRINTF
-#define printf(fmt, ...) (0)
-#endif
-
-#ifdef DEBUG
-#define printf_d(fmt, ...) printf(fmt, __VA_ARGS__)
-#else
-#define printf_d(fmt, ...) do {} while (0)
-#endif
+#define DEBUG
 
 Token* current_ = NULL;
 Token* next_    = NULL;
@@ -480,7 +472,7 @@ AST_NODE* parseStatement() {
                 bool endComment = false;
 
                 while(!endComment) {
-                    printf_d("%s (%d) %s (%d)\n", current_->value, current_->row, 
+                    printf("%s (%d) %s (%d)\n", current_->value, current_->row, 
                                                 next_->value,    next_->row);
 
                     if (current_->row == next_->row) {
@@ -491,7 +483,7 @@ AST_NODE* parseStatement() {
                     endComment = true;
                 }
 
-                printf_d("\n");
+                printf("\n");
             }
 
             break;
@@ -586,7 +578,9 @@ void parse() {
     while (nextToken() != NULL) {
         AST_NODE* node = parseStatement();
 
+#ifdef DEBUG
         printAST(node);
+#endif
 
         AST_PUSH(node);
     }

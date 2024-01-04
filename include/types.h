@@ -1,4 +1,5 @@
 #ifndef TYPES_H
+#define TYPES_H
 
 #include "errors.h"
 #include "platform.h"
@@ -45,5 +46,7 @@ typedef enum {
 _RAISE(_INTERNAL_IMPL_ARCHITECTURE)
 
 #endif
+
+uint8_t CC_SIZEOF(CC_TYPE type);
 
 #endif /* types.h */
