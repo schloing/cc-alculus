@@ -12,24 +12,6 @@
 #include "../include/stdout.h"
 #include "../include/main.h"
 
-void freeTokens() {
-    for (int i = 0; i < sequence_pos; i++)
-        free(token_sequence[i].value);
-
-    free(token_sequence);
-}
-
-void freeAST(AST_NODE* node) {
-    if (node == NULL || node->children == NULL) 
-        return;
-
-    for (int i = 0; i < node->children_count; i++)
-        freeAST(&node->children[i]);
-
-    free(node->children);
-    free(node);
-}
-
 INIT_CC();
 
 int main() {
@@ -40,8 +22,8 @@ int main() {
         exit(1);
     }
 
-    token_sequence = (Token*)malloc(sizeof(Token) * sequence_size);
-    AST            = (AST_NODE*)malloc(sizeof(AST_NODE) * AST_size);
+    token_sequence = (Token*)calloc(sequence_size, sizeof(Token));
+    AST            = (AST_NODE*)calloc(AST_size, sizeof(AST_NODE));
 
     // tokenization should never fail*, so we can just allocate AST
     // anyway. *there may be errors in tokenization, but it would never

@@ -27,10 +27,10 @@ isKeyword(const char* identifier,
           TOK_TYPE*   /* out */ o_type) {
 
      for (int i = 0; i < keywords_size; i++) {
-         if (strcmp(identifier, keywords[i].keyword) == 0) {
-             *o_type = keywords[i].type;
-             return true;
-         }
+        if (strcmp(identifier, keywords[i].keyword) == 0) {
+            *o_type = keywords[i].type;
+            return true;
+        }
     }
 
     return false;
@@ -95,7 +95,7 @@ void tokenize() {
             {
                 token.type = NUMERICAL ? TOK_NUMERICAL_LITERAL : TOK_LITERAL;
 
-                char*  literal      = (char*)malloc(sizeof(char) * 16);
+                char*  literal      = (char*)calloc(16, sizeof(char));
                 size_t literal_size = 16;
                 size_t literal_pos  = 1;
 
@@ -120,7 +120,7 @@ void tokenize() {
 
                 literal[literal_pos] = '\0';
 
-                token.value = (char*)malloc(sizeof(char) * literal_pos);
+                token.value = (char*)calloc(literal_pos + 1, sizeof(char));
                 strcpy(token.value, literal);
 
                 isKeyword(token.value, &token.type);
@@ -132,7 +132,7 @@ void tokenize() {
              token.type != TOK_NUMERICAL_LITERAL  &&
              token.type <  KEYWORDS)              || SKIP_ANYWAY) {
 
-            token.value = (char*)malloc(sizeof(char) * 2);
+            token.value = (char*)calloc(2, sizeof(char));
 
             token.value[0] = active;
             token.value[1] = '\0';
@@ -168,4 +168,11 @@ inline bool isnonkwd(Token* token) {
 inline bool isbinexp(Token* token) {
     return (token->type > BINEXPS &&
             token->type < KEYWORDS);
+}
+
+void freeTokens() {
+    for (int i = 0; i < sequence_pos; i++)
+        free(token_sequence[i].value);
+
+    free(token_sequence);
 }

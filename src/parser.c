@@ -58,12 +58,19 @@ void consumeToken(Token token) {
 
 AST_NODE* newNode() {
     AST_NODE* node = (AST_NODE*)malloc(sizeof(AST_NODE));
+    
+    node->type = AST_NONE;
 
     node->children_size  = 10;
     node->children_count = 0;
 
     node->children = (AST_NODE*)malloc(sizeof(AST_NODE) *
                                        node->children_size);
+
+    if (node->children == NULL) {
+        free(node);
+        _RAISE(_INTERNAL_ALLOCATION_FAILED);
+    }
 
     return node;
 }
@@ -224,7 +231,10 @@ parseCSV(AST_NODE* node) {
                 properties->paramSize += 10;
                 params = (IDENTIFIER*)realloc(params, sizeof(IDENTIFIER) * properties->paramSize);
 
-                if (params == NULL) _RAISE(_INTERNAL_REALLOCATION_FAILED);
+                if (params == NULL) { 
+                    free(params); 
+                    _RAISE(_INTERNAL_REALLOCATION_FAILED);
+                }
             }
 
             params[properties->paramCount++] = tmp; /* typedef char* IDENTIFIER */
@@ -294,6 +304,8 @@ parseDefcl(AST_NODE* node) {
 
             node->FUNCTION_DECLARATION_.common.identifer = identnode;
             node->FUNCTION_DECLARATION_.common.type      = typelit;
+            // default function declaration forward-ness to false
+            node->FUNCTION_DECLARATION_.isForward        = false;
 
             // parse comma-separated 'values' (arguments)
             parseCSV(node);
@@ -365,9 +377,12 @@ char* literaltochar(CC_TYPE flag) {
     }
 }
 
+// note to self:
+// there *might* be temporary free's inside this function
+// they were to resolve some memory leaks due to memory
+// i forgot to free when writing the function
 void printAST(const AST_NODE* node) {
     if (node == NULL) return;
-    if (node->type == AST_NONE) return;
 
     switch (node->type) {
     case AST_VARIABLE_DECLARATION:
@@ -391,7 +406,7 @@ void printAST(const AST_NODE* node) {
         break;
 
     case AST_IDENTIFIER:
-        printf(BLUE "%s" RESET, node->IDENTIFIER_.value); 
+        printf(BLUE "%s" RESET, node->IDENTIFIER_.value);
         
         break;
 
@@ -438,7 +453,7 @@ void printAST(const AST_NODE* node) {
 
     case AST_FUNCTION_DECLARATION:
     {
-        char*         identifier = node->FUNCTION_DECLARATION_.common.identifer.value;
+        char*    identifier = node->FUNCTION_DECLARATION_.common.identifer.value;
         CC_TYPE  type       = node->FUNCTION_DECLARATION_.common.type;
 
         char* typestr = literaltochar(type);
@@ -547,7 +562,10 @@ void AST_PUSH(const AST_NODE* child) {
         AST_size += 10;
         AST = (AST_NODE*)realloc(AST, sizeof(AST_NODE) * AST_size);
         
-        if (AST == NULL) _RAISE(_INTERNAL_REALLOCATION_FAILED);
+        if (AST == NULL) {
+            free(AST);
+            _RAISE(_INTERNAL_REALLOCATION_FAILED);
+        }
     }
 
     AST[AST_position] = *child;
@@ -563,13 +581,72 @@ void push(AST_NODE* parent, AST_NODE* child) {
         parent->children = (AST_NODE*)realloc(parent->children,
                            sizeof(AST_NODE) * parent->children_size);
 
-        if (parent->children == NULL) _RAISE(_INTERNAL_REALLOCATION_FAILED);
+        if (parent->children == NULL) {
+            free(parent->children);
+            _RAISE(_INTERNAL_REALLOCATION_FAILED);
+        }
     }
 
     child->parent = parent;
 
     parent->children[parent->children_count] = *child;
     parent->children_count++;
+}
+
+void freeAST(AST_NODE* node) {
+    if (node == NULL || node->children == NULL) 
+        return;
+    
+    switch (node->type) {
+    case AST_VARIABLE_DECLARATION:
+        freeAST(node->VARIABLE_DECLARATION_.init);
+        free(node->VARIABLE_DECLARATION_.identifier.value);
+
+        break;
+
+    case AST_BINARY_EXPRESSION:
+        freeAST(node->BINARY_EXPRESSION_.left);
+        freeAST(node->BINARY_EXPRESSION_.right);
+
+        free(node->BINARY_EXPRESSION_.left);
+        free(node->BINARY_EXPRESSION_.right);
+
+        break;
+
+    case AST_IDENTIFIER:
+        free(node->IDENTIFIER_.value);
+        
+        break;
+
+    case AST_LITERAL:
+        // free(node->LITERAL_.value);
+
+        break;
+    
+    case AST_FUNCTION_CALL: 
+    {
+        free(node->FUNCTION_CALL_.common.identifer.value);
+        free(node->FUNCTION_CALL_.common.params);
+
+        break;
+    }
+
+    case AST_FUNCTION_DECLARATION:
+    {
+        free(node->FUNCTION_DECLARATION_.common.identifer.value);
+        free(node->FUNCTION_DECLARATION_.common.params);
+
+        break;
+    }
+    
+    default: break;
+    }
+
+    for (int i = 0; i < node->children_count; i++)
+        freeAST(&node->children[i]);
+
+    free(node->children);
+    free(node);
 }
 
 void parse() {
@@ -583,8 +660,4 @@ void parse() {
 
         AST_PUSH(node);
     }
-
-#ifdef DEBUG
-    printAST(AST->children);
-#endif
 }
