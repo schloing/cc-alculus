@@ -3,7 +3,8 @@ int x();
 
 int main() {
     int a = 0.12;
-    int b = (a + 1);
+    int b = (annoying_value + 1);
+    int a = 1 + b + 1;
 
     // a = 1 * 23;
 

@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "../include/emitter.h"
 #include "../include/tokens.h"
 #include "../include/tokenizer.h"
 #include "../include/keywords.h"
@@ -45,7 +46,7 @@ int main() {
     // tokenization should never fail*, so we can just allocate AST
     // anyway. *there may be errors in tokenization, but it would never
     // cause a termination of the program.
-    
+
     tokenize   ();
     parse      ();
     freeTokens (/* token_sequence */);

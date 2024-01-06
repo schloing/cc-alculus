@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "../include/types.h"
 #include "../include/tokens.h"
 #include "../include/tokenizer.h"
 #include "../include/keywords.h"
@@ -99,7 +100,11 @@ AST_NODE* parsePrimaryExpression() {
         node->type              = AST_IDENTIFIER;
         node->IDENTIFIER_.value = current_->value;
 
+        // parseLiteral sets variable names to AST_NONE in assignments (eg. int b = a + 1)
+        //                                                                          ^ AST_NONE
+
         parseLiteral(node);
+
         nextToken();
 
         break;
@@ -110,6 +115,7 @@ AST_NODE* parsePrimaryExpression() {
         node = parseExpression();
         
         consumeToken(newToken(")", TOK_RIGHT_PARENTH));
+        
         break;
 
     default:
@@ -235,7 +241,7 @@ parseCSV(AST_NODE* node) {
     nextToken();
 }
 
-/* inline FORCE_GCC_INLINE */ LITERAL_FLAG
+/* inline FORCE_GCC_INLINE */ CC_TYPE
 ttop_literal(TOK_TYPE type) { // tokenizer to parser for literal
     switch (current_->type) {
         case TOK_INT:  return INT16;
@@ -272,7 +278,7 @@ parseDefcl(AST_NODE* node) {
         // return type
 
         Token        type    = *current_;
-        LITERAL_FLAG typelit = ttop_literal(type.type);
+        CC_TYPE typelit = ttop_literal(type.type);
         
         nextToken();
 
@@ -344,7 +350,7 @@ parseLiteral(AST_NODE* node) {
     }
 }
 
-char* literaltochar(LITERAL_FLAG flag) {
+char* literaltochar(CC_TYPE flag) {
     switch (flag) {
     case DOUBLE: return "double";
     case FLOAT:  return "FLOAT";
@@ -408,7 +414,7 @@ void printAST(const AST_NODE* node) {
 
 /*      node->FUNCTION_CALL_.common.type should technically never be set by this point.
 
-        LITERAL_FLAG  type    = node->FUNCTION_CALL_.common.type;
+        CC_TYPE  type    = node->FUNCTION_CALL_.common.type;
         char*         typestr = literaltochar(type);
 */
         // function calls would NOT have a definite type
@@ -433,7 +439,7 @@ void printAST(const AST_NODE* node) {
     case AST_FUNCTION_DECLARATION:
     {
         char*         identifier = node->FUNCTION_DECLARATION_.common.identifer.value;
-        LITERAL_FLAG  type       = node->FUNCTION_DECLARATION_.common.type;
+        CC_TYPE  type       = node->FUNCTION_DECLARATION_.common.type;
 
         char* typestr = literaltochar(type);
 
@@ -472,9 +478,6 @@ AST_NODE* parseStatement() {
                 bool endComment = false;
 
                 while(!endComment) {
-                    printf("%s (%d) %s (%d)\n", current_->value, current_->row, 
-                                                next_->value,    next_->row);
-
                     if (current_->row == next_->row) {
                         nextToken();
                         continue;
@@ -482,8 +485,6 @@ AST_NODE* parseStatement() {
 
                     endComment = true;
                 }
-
-                printf("\n");
             }
 
             break;
@@ -577,11 +578,13 @@ void parse() {
 
     while (nextToken() != NULL) {
         AST_NODE* node = parseStatement();
-
-#ifdef DEBUG
+    
         printAST(node);
-#endif
 
         AST_PUSH(node);
     }
+
+#ifdef DEBUG
+    printAST(AST->children);
+#endif
 }

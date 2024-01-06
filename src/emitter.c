@@ -1,16 +1,22 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
+#include "../include/emitter.h"
 #include "../include/stdout.h"
 #include "../include/parser.h"
 
 void emitAST(const AST_NODE* node) {
-    if (node == NULL) return;
-    if (node->type == AST_NONE) return;
+    printf("emitAST\n");
+
+    if (node       == NULL ||
+        node->type == AST_NONE) return;
+
+    size_t stackframe = 0;
 
     switch (node->type) {
-    case AST_VARIABLE_DECLARATION: 
+    case AST_VARIABLE_DECLARATION:
     {
         // varname node->VARIABLE_DECLARATION_.identifier.value
         // varval  node->VARIABLE_DECLARATION_.init (AST_NODE)
@@ -22,6 +28,10 @@ void emitAST(const AST_NODE* node) {
 
         // get context of stack from parent
         // store self in stack
+
+        size_t stackframe_offset = (stackframe += sizeof_i);
+
+        printf("mov %s PTR [ebp-%zu] \n", (char*[5]){ "BYTE", "WORD", "DWORD", "", "QWORD" }[sizeof_i / 2], stackframe_offset);
 
         // identifier->isdirect ? identifier->dir_type
 
@@ -68,6 +78,8 @@ void emitAST(const AST_NODE* node) {
         // mov eax, *retval*
         // pop rbp
         // ret
+
+        stackframe = 0;
 
         break;
     }
