@@ -29,12 +29,14 @@ int main() {
     // anyway. *there may be errors in tokenization, but it would never
     // cause a termination of the program.
 
-    tokenize   ();
-    parse      ();
-    freeTokens (/* token_sequence */);
-    freeAST    (AST);
-    free       (buffname);
-    fclose     (buffer);
+    tokenize();
+    parse();
+
+    freeTokens(/* token_sequence */);
+    free(AST);
+    free(buffname);
+
+    fclose(buffer);
 
     return 0;
 }

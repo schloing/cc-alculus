@@ -13,6 +13,12 @@ OBJS = $(patsubst $(SRC_DIR)/%.c,$(OBJ_DIR)/%.o,$(SRCS))
 
 all: $(OUT)
 
+run:
+	./$(OUT)
+
+debug:
+	valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes -s ./$(OUT)
+
 $(OUT): $(OBJS)
 	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS)
 

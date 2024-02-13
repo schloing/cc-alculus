@@ -228,7 +228,7 @@ parseCSV(AST_NODE* node) {
             tmp.value = current_->value;
 
             if (properties->paramCount >= properties->paramSize) {
-                properties->paramSize += 10;
+                properties->paramSize *= 2;
                 params = (IDENTIFIER*)realloc(params, sizeof(IDENTIFIER) * properties->paramSize);
 
                 if (params == NULL) { 
@@ -555,11 +555,11 @@ AST_NODE* parseStatement() {
 
 // AST_PUSH(child) != push(AST, child)
 void AST_PUSH(const AST_NODE* child) {
-    if (AST   == NULL ||
-        child == NULL) return; // sanity
+    if (AST == NULL || child == NULL)
+        return; // sanity
 
     if (AST_position >= AST_size) {
-        AST_size += 10;
+        AST_size *= 2;
         AST = (AST_NODE*)realloc(AST, sizeof(AST_NODE) * AST_size);
         
         if (AST == NULL) {
@@ -570,14 +570,25 @@ void AST_PUSH(const AST_NODE* child) {
 
     AST[AST_position] = *child;
     AST_position++;
+
+    // the *child pointer is dereferenced when pushing into the AST
+    // this means it is lost after the scope it was called from
+    // obviously gotta free all children nodes asw
+
+    if (child != NULL) {
+        freeAST(child);
+        free(child);
+
+        child = NULL;
+    }
 }
 
 void push(AST_NODE* parent, AST_NODE* child) {
-    if (parent == NULL ||
-        child  == NULL) return; // sanity
+    if (parent == NULL || child  == NULL)
+        return; // sanity
 
     if (parent->children_count >= parent->children_size) {
-        parent->children_size += 10;
+        parent->children_size *= 2;
         parent->children = (AST_NODE*)realloc(parent->children,
                            sizeof(AST_NODE) * parent->children_size);
 
@@ -646,7 +657,7 @@ void freeAST(AST_NODE* node) {
         freeAST(&node->children[i]);
 
     free(node->children);
-    free(node);
+//  free(node);
 }
 
 void parse() {

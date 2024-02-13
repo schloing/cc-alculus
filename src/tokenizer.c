@@ -141,8 +141,13 @@ void tokenize() {
         token_sequence[sequence_pos++] = token;
 
         if (sequence_pos >= sequence_size) {
-            sequence_size += 5;
+            size_t old = sequence_size;
+            
+            sequence_size *= 2;
             token_sequence = (Token*)realloc(token_sequence, sizeof(Token) * sequence_size);
+
+            for (size_t i = old; i < sequence_size; i++)
+                token_sequence[i] = (Token) {};
         }
     }
 }
