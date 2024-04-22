@@ -1,18 +1,17 @@
-#include <ctype.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-#include "../include/types.h"
-#include "../include/tokens.h"
-#include "../include/tokenizer.h"
-#include "../include/keywords.h"
-#include "../include/parser_forwards.h"
-#include "../include/parser.h"
-#include "../include/stdout.h"
+#include "../include/a_alloc.h"
 #include "../include/errors.h"
+#include "../include/parser.h"
+#include "../include/parser_forwards.h"
+#include "../include/stdout.h"
+#include "../include/tokenizer.h"
+#include "../include/tokens.h"
+#include "../include/types.h"
 
 #if defined(__GNUC__) || defined(__GNUG__) && !defined(__clang__)
 // not forcing inline anymore
@@ -57,15 +56,15 @@ void consumeToken(Token token) {
 }
 
 AST_NODE* newNode() {
-    AST_NODE* node = (AST_NODE*)malloc(sizeof(AST_NODE));
-    
-    node->type = AST_NONE;
+    AST_NODE* node;
 
+    a_malloc((void**)&node, sizeof(AST_NODE));
+    
     node->children_size  = 10;
     node->children_count = 0;
+    node->type           = AST_NONE;
 
-    node->children = (AST_NODE*)malloc(sizeof(AST_NODE) *
-                                       node->children_size);
+    a_malloc((void**)&node->children, sizeof(AST_NODE) * node->children_size);
 
     if (node->children == NULL) {
         free(node);
@@ -105,7 +104,8 @@ AST_NODE* parsePrimaryExpression() {
 
     case TOK_LITERAL:
         node->type              = AST_IDENTIFIER;
-        node->IDENTIFIER_.value = current_->value;
+        node->IDENTIFIER_.value = strdup(current_->value);
+        a_manrec((void**)&node->IDENTIFIER_.value);
 
         // parseLiteral sets variable names to AST_NONE in assignments (eg. int b = a + 1)
         //                                                                          ^ AST_NONE
@@ -207,7 +207,7 @@ parseCSV(AST_NODE* node) {
     properties->paramSize  = 10; // arbitrary default size
     properties->paramCount = 0;
 
-    properties->params     = (IDENTIFIER*)malloc(sizeof(IDENTIFIER) * properties->paramSize);
+    a_malloc((void**)&properties->params, sizeof(IDENTIFIER) * properties->paramSize);
 
     consumeToken(newToken("(", TOK_LEFT_PARENTH));
 
@@ -225,7 +225,8 @@ parseCSV(AST_NODE* node) {
            (current_->type == TOK_LITERAL ||
             current_->type == TOK_NUMERICAL_LITERAL) {
 
-            tmp.value = current_->value;
+            tmp.value = strdup(current_->value);
+            a_manrec((void**)&tmp.value);
 
             if (properties->paramCount >= properties->paramSize) {
                 properties->paramSize *= 2;
@@ -273,13 +274,13 @@ ttop_operator(TOK_TYPE type) { // tokenizer to parser for operators
 
 /* inline FORCE_GCC_INLINE */ void
 parseAssignment(AST_NODE* node) {
-    char* identifier = current_->value;
-
     nextToken();
     consumeToken(newToken("=", TOK_EQUALS));
 
-    node->VARIABLE_DECLARATION_.identifier.value = strdup(identifier);
+    node->VARIABLE_DECLARATION_.identifier.value = strdup(current_->value);
     node->VARIABLE_DECLARATION_.init             = parseExpression();
+
+    a_manrec((void**)&node->VARIABLE_DECLARATION_.identifier.value);
 }
 
 /* inline FORCE_GCC_INLINE */ void
@@ -347,7 +348,8 @@ parseLiteral(AST_NODE* node) {
 
             node->type = AST_FUNCTION_CALL;
 
-            char* literal = current_->value;
+            char* literal = strdup(current_->value);
+            a_manrec((void**)&literal);
 
             IDENTIFIER identifierNode = { .value = literal };
             node->FUNCTION_CALL_.common.identifer = identifierNode;
@@ -575,12 +577,12 @@ void AST_PUSH(const AST_NODE* child) {
     // this means it is lost after the scope it was called from
     // obviously gotta free all children nodes asw
 
-    if (child != NULL) {
-        freeAST(child);
-        free(child);
-
-        child = NULL;
-    }
+//   if (child != NULL) {
+//       freeAST(child);
+//       free(child);
+//
+//       child = NULL;
+//   }
 }
 
 void push(AST_NODE* parent, AST_NODE* child) {
@@ -604,6 +606,8 @@ void push(AST_NODE* parent, AST_NODE* child) {
     parent->children_count++;
 }
 
+#define godfree(value) free(value); value = NULL;
+
 void freeAST(AST_NODE* node) {
     if (node == NULL || node->children == NULL) 
         return;
@@ -611,7 +615,7 @@ void freeAST(AST_NODE* node) {
     switch (node->type) {
     case AST_VARIABLE_DECLARATION:
         freeAST(node->VARIABLE_DECLARATION_.init);
-        free(node->VARIABLE_DECLARATION_.identifier.value);
+        godfree(node->VARIABLE_DECLARATION_.identifier.value);
 
         break;
 
@@ -619,33 +623,33 @@ void freeAST(AST_NODE* node) {
         freeAST(node->BINARY_EXPRESSION_.left);
         freeAST(node->BINARY_EXPRESSION_.right);
 
-        free(node->BINARY_EXPRESSION_.left);
-        free(node->BINARY_EXPRESSION_.right);
+        godfree(node->BINARY_EXPRESSION_.left);
+        godfree(node->BINARY_EXPRESSION_.right);
 
         break;
 
     case AST_IDENTIFIER:
-        free(node->IDENTIFIER_.value);
+        godfree(node->IDENTIFIER_.value);
         
         break;
 
     case AST_LITERAL:
-        // free(node->LITERAL_.value);
+        // godfree(node->LITERAL_.value);
 
         break;
     
     case AST_FUNCTION_CALL: 
     {
-        free(node->FUNCTION_CALL_.common.identifer.value);
-        free(node->FUNCTION_CALL_.common.params);
+        godfree(node->FUNCTION_CALL_.common.identifer.value);
+        godfree(node->FUNCTION_CALL_.common.params);
 
         break;
     }
 
     case AST_FUNCTION_DECLARATION:
     {
-        free(node->FUNCTION_DECLARATION_.common.identifer.value);
-        free(node->FUNCTION_DECLARATION_.common.params);
+        godfree(node->FUNCTION_DECLARATION_.common.identifer.value);
+        godfree(node->FUNCTION_DECLARATION_.common.params);
 
         break;
     }

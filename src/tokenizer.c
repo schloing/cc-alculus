@@ -4,9 +4,10 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "../include/tokens.h"
-#include "../include/tokenizer.h"
+#include "../include/a_alloc.h"
 #include "../include/keywords.h"
+#include "../include/tokenizer.h"
+#include "../include/tokens.h"
 
 static inline char peek();
 static inline char next();
@@ -95,9 +96,11 @@ void tokenize() {
             {
                 token.type = NUMERICAL ? TOK_NUMERICAL_LITERAL : TOK_LITERAL;
 
-                char*  literal      = (char*)calloc(16, sizeof(char));
+                char*  literal;
                 size_t literal_size = 16;
                 size_t literal_pos  = 1;
+
+                a_calloc((void**)&literal, literal_size, sizeof(char));
 
                 literal[0] = active;
 
@@ -120,11 +123,10 @@ void tokenize() {
 
                 literal[literal_pos] = '\0';
 
-                token.value = (char*)calloc(literal_pos + 1, sizeof(char));
+                a_calloc((void**)&token.value, literal_pos + 1, sizeof(char));
                 strcpy(token.value, literal);
 
                 isKeyword(token.value, &token.type);
-                free(literal);
             }
         }
 
@@ -132,7 +134,7 @@ void tokenize() {
              token.type != TOK_NUMERICAL_LITERAL  &&
              token.type <  KEYWORDS)              || SKIP_ANYWAY) {
 
-            token.value = (char*)calloc(2, sizeof(char));
+            a_calloc((void**)&token.value, 2, sizeof(char));
 
             token.value[0] = active;
             token.value[1] = '\0';
@@ -176,8 +178,10 @@ inline bool isbinexp(Token* token) {
 }
 
 void freeTokens() {
-    for (int i = 0; i < sequence_pos; i++)
-        free(token_sequence[i].value);
+    for (int i = 0; i < sequence_pos; i++) {
+        if (token_sequence[i].value != NULL)
+            free(token_sequence[i].value);
+    }
 
     free(token_sequence);
 }

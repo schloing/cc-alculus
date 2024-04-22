@@ -5,7 +5,7 @@ OBJ_DIR 	= obj
 OUT = a.out
 CC  = gcc
 
-CFLAGS = -g -Wall
+CFLAGS = -g -Wall #-fsanitize=address
 LFLAGS =
 
 SRCS = $(filter-out ../src/test.c, $(wildcard $(SRC_DIR)/*.c))
