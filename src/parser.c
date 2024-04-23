@@ -230,7 +230,7 @@ parseCSV(AST_NODE* node) {
 
             if (properties->paramCount >= properties->paramSize) {
                 properties->paramSize *= 2;
-                params = (IDENTIFIER*)realloc(params, sizeof(IDENTIFIER) * properties->paramSize);
+                a_realloc((void**)&params, sizeof(IDENTIFIER) * properties->paramSize);
 
                 if (params == NULL) { 
                     free(params); 
@@ -562,7 +562,7 @@ void AST_PUSH(const AST_NODE* child) {
 
     if (AST_position >= AST_size) {
         AST_size *= 2;
-        AST = (AST_NODE*)realloc(AST, sizeof(AST_NODE) * AST_size);
+        a_realloc((void**)&AST, sizeof(AST_NODE) * AST_size);
         
         if (AST == NULL) {
             free(AST);
@@ -591,8 +591,7 @@ void push(AST_NODE* parent, AST_NODE* child) {
 
     if (parent->children_count >= parent->children_size) {
         parent->children_size *= 2;
-        parent->children = (AST_NODE*)realloc(parent->children,
-                           sizeof(AST_NODE) * parent->children_size);
+        a_realloc((void**)&parent->children, sizeof(AST_NODE) * parent->children_size);
 
         if (parent->children == NULL) {
             free(parent->children);

@@ -112,7 +112,7 @@ void tokenize() {
 
                     if (literal_pos == literal_size - 1) {
                         literal_size += 5;
-                        literal = (char*)realloc(literal, literal_size);
+                        a_realloc((void**)&literal, literal_size);
                     }
 
                     literal[literal_pos] = active;
@@ -146,7 +146,7 @@ void tokenize() {
             size_t old = sequence_size;
             
             sequence_size *= 2;
-            token_sequence = (Token*)realloc(token_sequence, sizeof(Token) * sequence_size);
+            a_realloc((void**)&token_sequence, sizeof(Token) * sequence_size);
 
             for (size_t i = old; i < sequence_size; i++)
                 token_sequence[i] = (Token) {};

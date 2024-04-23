@@ -20,8 +20,8 @@ int main() {
         exit(1);
     }
 
-    a_calloc(&token_sequence, sequence_size, sizeof(Token));
-    a_calloc(&AST, AST_size, sizeof(AST_NODE));
+    a_calloc((void**)&token_sequence, sequence_size, sizeof(Token));
+    a_calloc((void**)&AST, AST_size, sizeof(AST_NODE));
 
     tokenize();
     parse();
