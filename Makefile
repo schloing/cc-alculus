@@ -1,6 +1,6 @@
-SRC_DIR     = ../src
-INCLUDE_DIR = ../include
-OBJ_DIR 	= obj
+SRC_DIR     = ./src
+INCLUDE_DIR = ./include
+OBJ_DIR 	= ./obj
 
 OUT = a.out
 CC  = gcc
@@ -8,7 +8,7 @@ CC  = gcc
 CFLAGS = -g -Wall #-fsanitize=address
 LFLAGS =
 
-SRCS = $(filter-out ../src/test.c, $(wildcard $(SRC_DIR)/*.c))
+SRCS = $(filter-out $(SRC_DIR)/test.c, $(wildcard $(SRC_DIR)/*.c))
 OBJS = $(patsubst $(SRC_DIR)/%.c,$(OBJ_DIR)/%.o,$(SRCS))
 
 all: $(OUT)

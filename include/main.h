@@ -1,6 +1,8 @@
 #ifndef MAIN_H
 #define MAIN_H
 
+#include "keywords.h"
+
 #define INIT_CC()                                       \
     Token*    token_sequence = NULL;                    \
     AST_NODE* AST            = NULL;                    \

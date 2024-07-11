@@ -4,7 +4,6 @@
 #include <string.h>
 
 #include "../include/a_alloc.h"
-#include "../include/emitter.h"
 #include "../include/tokens.h"
 #include "../include/tokenizer.h"
 #include "../include/parser.h"
@@ -12,8 +11,11 @@
 
 INIT_CC();
 
-int main() {
-    openBuffer("test.c");
+int main(int argc, char** argv) {
+    if (argc != 2)
+        exit(1);
+
+    openBuffer(argv[1]);
     
     if (buffer == NULL) {
         perror("failed to open buffer");

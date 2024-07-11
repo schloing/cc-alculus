@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "../include/emitter.h"
+// #include "../include/emitter.h"
 #include "../include/stdout.h"
 #include "../include/parser.h"
 
