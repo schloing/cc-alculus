@@ -7,6 +7,11 @@ a webassembly compiler. compiles a simple c-like language into webassembly.
 cc-alculus was supposed to be a 1:1 c compiler but i honestly dont know enough about compilers to be able to write a half decent parser which can support
 all the intricacies and weird-ness of the language.
 
+### update
+i wrote a lot of this code a long time ago and since then i have learned how to write it better.  
+the code i had written was suboptimal and frankly pretty bad and im considering scrapping the parser and rewriting it.  
+as far as im concerned the tokenizer is ok but the parser is messy and it would probably be faster to rewrite it and then continue with adding features.  
+
 ### planned support
 im going to try and add enough to the compiler so that it is able to run the basic c code that made it. because it compiles to webassembly (is that considered transpilation? idk) it would allow for c code to run in the browser. screw emscripten.  
 
