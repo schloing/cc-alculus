@@ -100,18 +100,21 @@ AST_NODE* parsePrimaryExpression() {
         }
 
         nextToken();
+
         break;
 
     case TOK_LITERAL:
         node->type              = AST_IDENTIFIER;
         node->IDENTIFIER_.value = strdup(current_->value);
+
         a_manrec((void**)&node->IDENTIFIER_.value);
 
         // parseLiteral sets variable names to AST_NONE in assignments (eg. int b = a + 1)
         //                                                                          ^ AST_NONE
+        // why the fuck does it do that??
+        // fixed.
 
         parseLiteral(node);
-
         nextToken();
 
         break;
@@ -139,7 +142,6 @@ AST_NODE* parseExpression() {
 
     while (current_ &&
            isbinexp(current_)) {
-
         OPERATOR operator;
         operator = current_->type;
 
@@ -147,7 +149,7 @@ AST_NODE* parseExpression() {
 
         AST_NODE* right = parsePrimaryExpression();
         AST_NODE* node  = newNode();
-       
+
         node->type = AST_BINARY_EXPRESSION;
        
         node->BINARY_EXPRESSION_.left      = left;
@@ -160,7 +162,7 @@ AST_NODE* parseExpression() {
     return left;
 }
 
-/* inline FORCE_GCC_INLINE */ void
+void
 parseIf(AST_NODE* node) {
     consumeToken(newToken("if", TOK_IF));
 
@@ -188,7 +190,7 @@ parseIf(AST_NODE* node) {
     consumeToken(newToken("}", TOK_CLOSE_CURLY));
 }
 
-/* inline FORCE_GCC_INLINE */ void
+void
 parseCSV(AST_NODE* node) {
     expect(current_, newToken("(", TOK_LEFT_PARENTH));
 
@@ -252,7 +254,7 @@ parseCSV(AST_NODE* node) {
     nextToken();
 }
 
-/* inline FORCE_GCC_INLINE */ CC_TYPE
+CC_TYPE
 ttop_literal(TOK_TYPE type) { // tokenizer to parser for literal
     switch (current_->type) {
         case TOK_INT:  return INT16;
@@ -261,7 +263,7 @@ ttop_literal(TOK_TYPE type) { // tokenizer to parser for literal
     }
 }
 
-/* inline FORCE_GCC_INLINE */ char
+char
 ttop_operator(TOK_TYPE type) { // tokenizer to parser for operators
     switch (type) {
     case TOK_ADDITION:    return '+';
@@ -272,23 +274,24 @@ ttop_operator(TOK_TYPE type) { // tokenizer to parser for operators
     }
 }
 
-/* inline FORCE_GCC_INLINE */ void
+void
 parseAssignment(AST_NODE* node) {
+    node->VARIABLE_DECLARATION_.identifier.value = strdup(current_->value);
+   
     nextToken();
     consumeToken(newToken("=", TOK_EQUALS));
 
-    node->VARIABLE_DECLARATION_.identifier.value = strdup(current_->value);
-    node->VARIABLE_DECLARATION_.init             = parseExpression();
+    node->VARIABLE_DECLARATION_.init = parseExpression();
 
     a_manrec((void**)&node->VARIABLE_DECLARATION_.identifier.value);
 }
 
-/* inline FORCE_GCC_INLINE */ void
+void
 parseDefcl(AST_NODE* node) {
     if (istype(current_)) {
         // return type
 
-        Token        type    = *current_;
+        Token   type    = *current_;
         CC_TYPE typelit = ttop_literal(type.type);
         
         nextToken();
@@ -333,7 +336,7 @@ parseDefcl(AST_NODE* node) {
     }
 }
 
-/* inline FORCE_GCC_INLINE */ void
+void
 parseLiteral(AST_NODE* node) {
     if (next_->type == TOK_EQUALS) {
         /* variable assignment */
@@ -358,10 +361,6 @@ parseLiteral(AST_NODE* node) {
 
             parseCSV(node);
        }
-    else {
-        // set node->type to AST_NONE
-        node->type = AST_NONE;
-    }
 }
 
 char* literaltochar(CC_TYPE flag) {
@@ -537,6 +536,10 @@ AST_NODE* parseStatement() {
             retval = parseExpression();
             
             printf(GREEN "returning value " RESET);
+
+            printAST(retval);
+            
+            printf("\n");
 
             break;
 
